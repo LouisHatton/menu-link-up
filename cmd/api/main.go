@@ -26,6 +26,7 @@ import (
 type config struct {
 	appconfig.Environment
 	appconfig.Server
+	appconfig.Database
 }
 
 func main() {
@@ -75,26 +76,24 @@ func main() {
 	}
 
 	// --- Projects Store
-	const ProjectStoreCollectionName = "projects"
-	projectReader, err := projectsStoreReader.New(logger, ProjectStoreCollectionName, store)
+	projectReader, err := projectsStoreReader.New(logger, cfg.ProjectsCollectionName, store)
 	if err != nil {
 		logger.Fatal("error initializing projectsStoreReader", zap.Error(err))
 	}
 
-	projectsWriter, err := projectsStoreWriter.New(logger, ProjectStoreCollectionName, store)
+	projectsWriter, err := projectsStoreWriter.New(logger, cfg.ProjectsCollectionName, store)
 	if err != nil {
 		logger.Fatal("error initializing projectsStoreReader", zap.Error(err))
 	}
 	projectStore := projectsStore.New(projectReader, projectsWriter)
 
 	// --- Files Store
-	const FilesStoreCollectionName = "files"
-	fileReader, err := filesStoreReader.New(logger, FilesStoreCollectionName, store)
+	fileReader, err := filesStoreReader.New(logger, cfg.FilesCollectionName, store)
 	if err != nil {
 		logger.Fatal("error initializing filesStoreReader", zap.Error(err))
 	}
 
-	fileWriter, err := filesStoreWriter.New(logger, FilesStoreCollectionName, store)
+	fileWriter, err := filesStoreWriter.New(logger, cfg.FilesCollectionName, store)
 	if err != nil {
 		logger.Fatal("error initializing filesStoreWriter", zap.Error(err))
 	}

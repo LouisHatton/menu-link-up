@@ -71,19 +71,16 @@ func (api *API) CreateFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := uuid.New().String()
-	urlId := uuid.New().String()
 	logger = logger.With(zap.String("fileId", id))
 	newFile := files.File{
 		Id:        id,
-		UrlId:     urlId,
+		Slug:      data.Slug,
 		ProjectId: project.Id,
 		Name:      data.Name,
-		Tags:      data.Tags,
 		Metadata: files.Metadata{
 			CreatedBy: user.Id,
 			CreatedAt: time.Now(),
 		},
-		Status: files.Deploying,
 	}
 
 	if err := api.fileStore.Set(id, &newFile); err != nil {
@@ -163,7 +160,6 @@ func (api *API) EditFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	file.Name = newFile.Name
-	file.Tags = newFile.Tags
 
 	if err := api.fileStore.Set(id, file); err != nil {
 		logger.Error("failed to store file", zap.Error(err))
