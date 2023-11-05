@@ -40,8 +40,8 @@
 <div class="min-h-screen flex justify-center items-center">
 	<div class="p-6 w-2/5 space-y-4 md:space-y-6 sm:p-8">
 		<div class="flex flex-row justify-center items-center gap-x-2 my-8">
-			<img src="/static/insight-wave-800x800.png" alt="logo" class="w-10" />
-			<h1 class="text-2xl text-amber-500 font-semibold">InsightWave</h1>
+			<!-- <img src="/static/insight-wave-800x800.png" alt="logo" class="w-10" /> -->
+			<h1 class="text-2xl text-blue-600 font-semibold">MenuLink-Up</h1>
 		</div>
 		<form class="flex flex-col space-y-6" action="/">
 			<h3 class="text-xl font-medium text-gray-900 dark:text-white p-0">Register</h3>
@@ -72,7 +72,7 @@
 					required
 				/>
 			</Label>
-			<Button disabled={loading} on:click={handleClick} type="submit" class="w-full" color="yellow"
+			<Button disabled={loading} on:click={handleClick} type="submit" class="w-full" color="blue"
 				>{#if loading}<Spinner class="mr-3" size="4" color="white" />{/if}Create Account</Button
 			>
 			<SignInWithGoogle />

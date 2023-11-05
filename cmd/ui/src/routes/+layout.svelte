@@ -10,11 +10,13 @@
 	import Navigating from './Navigating.svelte';
 	import LoadingScreen from '$lib/components/LoadingScreen.svelte';
 
+	let loggingIn = false;
 	$: $page.route && checkIfLoggedIn($authStore.initialised);
 	let loading = true;
 
 	async function checkIfLoggedIn(init: boolean) {
 		loading = true;
+		loggingIn = localStorage.getItem('loggingIn') != null;
 		if (!init) return;
 		try {
 			const isInAuthRoute = $page.route.id?.includes('(authentication)');
@@ -22,6 +24,7 @@
 			if (!token && !isInAuthRoute) {
 				await goto('/login');
 			} else if (token && isInAuthRoute) {
+				localStorage.removeItem('loggingIn');
 				await goto('/');
 			}
 		} finally {
@@ -33,7 +36,7 @@
 <main class={`${$darkMode ? 'dark' : ''}`}>
 	<Navigating />
 	<!-- <ToastHandler /> -->
-	{#if $authStore.isLoggedIn || $page.route.id?.includes('(authentication)')}
+	{#if $authStore.isLoggedIn || ($page.route.id?.includes('(authentication)') && !loggingIn)}
 		<slot />
 	{:else if loading}
 		<LoadingScreen />

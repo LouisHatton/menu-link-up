@@ -1,11 +1,16 @@
 <script>
+	import Navbar from './Navbar.svelte';
 	import Sidebar from './Sidebar.svelte';
 </script>
 
-<section
+<!-- <section
 	class="min-h-screen max-w-full flex flex-row w-full bg-zinc-50 text-zinc-800 dark:bg-gray-700 dark:text-zinc-50"
+> -->
+<!-- <Sidebar /> -->
+<section
+	class="min-h-screen max-w-full flex flex-col w-full bg-zinc-50 text-zinc-800 dark:bg-gray-700 dark:text-zinc-50"
 >
-	<Sidebar />
+	<Navbar />
 
 	<div class="w-full relative">
 		<slot />

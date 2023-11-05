@@ -8,7 +8,7 @@
 	$: if ($navigating || externalLoading) startLoad();
 	else stopLoad();
 
-	let loaderStyle = 'fixed top-0 left-0 right-0 h-1 bg-amber-500 dark:bg-amber-600 z-50';
+	let loaderStyle = 'fixed top-0 left-0 right-0 h-1 bg-blue-500 dark:bg-blue-600 z-50';
 
 	let loading = true;
 	let loadingComplete = false;

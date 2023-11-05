@@ -6,9 +6,9 @@
 
 	$: active = $page.url.pathname === href;
 
-	$: activeClass = active ? 'bg-amber-500/10' : '';
+	$: activeClass = active ? 'bg-primary-500/10' : '';
 	let baseClass =
-		'text-left cursor-pointer flex flex-row items-center  hover:bg-amber-500/10 transition-all ease-in-out p-4 rounded-full text-zinc-800 font-semibold text-lg dark:text-zinc-100';
+		'text-left cursor-pointer flex flex-row items-center  hover:bg-primary-500/10 transition-all ease-in-out p-4 rounded-full text-zinc-800 font-semibold text-lg dark:text-zinc-100';
 </script>
 
 {#if href}

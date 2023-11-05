@@ -22,6 +22,6 @@
 
 {#if showLoading}
 	<div class="flex justify-center items-center min-h-screen dark:bg-gray-700">
-		<Spinner color="yellow" size="12" />
+		<Spinner color="blue" size="12" />
 	</div>
 {/if}

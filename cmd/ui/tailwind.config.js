@@ -9,16 +9,16 @@ export default {
 			colors: {
 				// flowbite-svelte
 				primary: {
-					50: '#ebf5ff',
-					100: '#fff1ee',
-					200: '#ffe4de',
-					300: '#ffd5cc',
-					400: '#ffbcad',
-					500: '#fe795d',
-					600: '#ef562f',
-					700: '#eb4f27',
-					800: '#d3330a',
-					900: '#d3330a'
+					50: '#eff6ff',
+					100: '#dbeafe',
+					200: '#bfdbfe',
+					300: '#93c5fd',
+					400: '#60a5fa',
+					500: '#3b82f6',
+					600: '#2563eb',
+					700: '#1d4ed8',
+					800: '#1e40af',
+					900: '#1e3a8a'
 				}
 			}
 		}

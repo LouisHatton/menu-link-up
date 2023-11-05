@@ -3,6 +3,7 @@
 	import AuthenticationService from '$lib/services/AuthenticationService';
 
 	async function handleClick() {
+		localStorage.setItem('loggingIn', 'true');
 		await AuthenticationService.signInWithGoogle();
 	}
 </script>

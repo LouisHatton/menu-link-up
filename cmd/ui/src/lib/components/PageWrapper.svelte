@@ -5,7 +5,7 @@
 </script>
 
 {#if sm}
-	<div class={classnames('px-6 py-4 w-full', $$props.class)}><slot /></div>
+	<div class={classnames($$props.class, 'px-6 py-4 w-full')}><slot /></div>
 {:else}
-	<div class="px-6 py-10 w-full"><slot /></div>
+	<div class={classnames($$props.class, 'max-w-6xl mx-auto px-6 py-10 w-full')}><slot /></div>
 {/if}
