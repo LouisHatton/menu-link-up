@@ -9,10 +9,10 @@ const (
 )
 
 const (
-	ConnectionIdParam     = "connectionId"
-	ConnectionUrlParam    = "/{connectionId}"
-	ConnectionsPathPrefix = "/connections"
-	CreateConnectionsPath = ProjectIdPath + ConnectionsPathPrefix
-	ConnectionsListPath   = ProjectIdPath + ConnectionsPathPrefix + "/list"
-	ConnectionIdPath      = ProjectIdPath + ConnectionsPathPrefix + ConnectionUrlParam
+	FileIdParam     = "fileId"
+	FileUrlParam    = "/{fileId}"
+	FilesPathPrefix = "/files"
+	CreateFilesPath = ProjectIdPath + FilesPathPrefix
+	FilesListPath   = ProjectIdPath + FilesPathPrefix + "/list"
+	FileIdPath      = ProjectIdPath + FilesPathPrefix + FileUrlParam
 )

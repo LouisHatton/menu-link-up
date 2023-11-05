@@ -5,15 +5,15 @@ import (
 	"fmt"
 
 	"cloud.google.com/go/firestore"
-	"github.com/LouisHatton/menu-link-up/internal/connections"
-	connectionStore "github.com/LouisHatton/menu-link-up/internal/connections/store"
 	dbFirestore "github.com/LouisHatton/menu-link-up/internal/db/firestore"
 	"github.com/LouisHatton/menu-link-up/internal/db/query"
+	"github.com/LouisHatton/menu-link-up/internal/files"
+	fileStore "github.com/LouisHatton/menu-link-up/internal/files/store"
 
 	"go.uber.org/zap"
 )
 
-var _ connectionStore.Reader = (*Reader)(nil)
+var _ fileStore.Reader = (*Reader)(nil)
 
 type Reader struct {
 	l          *zap.Logger
@@ -30,47 +30,47 @@ func New(logger *zap.Logger, collection string, client *firestore.Client) (*Read
 	return &r, nil
 }
 
-func (r *Reader) Get(id string) (*connections.Connection, error) {
-	logger := r.l.With(zap.String("connectionId", id))
+func (r *Reader) Get(id string) (*files.File, error) {
+	logger := r.l.With(zap.String("fileId", id))
 
-	logger.Debug("getting connection doc")
+	logger.Debug("getting file doc")
 
 	doc, err := r.db.Doc(id).Get(context.TODO())
 	if err != nil {
-		return nil, fmt.Errorf("error getting connection: %w", err)
+		return nil, fmt.Errorf("error getting file: %w", err)
 	}
-	logger.Debug("fetched connection doc")
+	logger.Debug("fetched file doc")
 
-	connection := connections.Empty()
-	err = doc.DataTo(&connection)
+	file := files.Empty()
+	err = doc.DataTo(&file)
 	if err != nil {
-		return nil, fmt.Errorf("error converting response to connection struct: %w", err)
+		return nil, fmt.Errorf("error converting response to file struct: %w", err)
 	}
 
-	return &connection, nil
+	return &file, nil
 }
 
-func (r *Reader) GetByUrl(id string) (*connections.Connection, error) {
+func (r *Reader) GetByUrl(id string) (*files.File, error) {
 	docs, err := r.db.Where("urlId", "==", id).Documents(context.TODO()).GetAll()
 	if err != nil {
 		return nil, fmt.Errorf("error fetching all documents: %w", err)
 	}
 
 	if len(docs) > 0 {
-		connection := connections.Empty()
+		file := files.Empty()
 		doc := docs[0]
-		err := doc.DataTo(&connection)
+		err := doc.DataTo(&file)
 		if err != nil {
-			return nil, fmt.Errorf("error converting response to connection: %w", err)
+			return nil, fmt.Errorf("error converting response to file: %w", err)
 		} else {
-			return &connection, nil
+			return &file, nil
 		}
 	} else {
 		return nil, fmt.Errorf("no document found with url id")
 	}
 }
 
-func (r *Reader) Many(opts query.Options, wheres ...query.Where) (*[]connections.Connection, error) {
+func (r *Reader) Many(opts query.Options, wheres ...query.Where) (*[]files.File, error) {
 
 	q := dbFirestore.GenerateQuery(r.db.Query, opts, wheres...)
 
@@ -79,12 +79,12 @@ func (r *Reader) Many(opts query.Options, wheres ...query.Where) (*[]connections
 	if err != nil {
 		return nil, fmt.Errorf("error fetching all documents: %w", err)
 	}
-	docs := []connections.Connection{}
+	docs := []files.File{}
 	for i, snap := range snapshots {
-		docs = append(docs, connections.Empty())
+		docs = append(docs, files.Empty())
 		err = snap.DataTo(&docs[i])
 		if err != nil {
-			return nil, fmt.Errorf("error converting response to connection struct: %w", err)
+			return nil, fmt.Errorf("error converting response to file struct: %w", err)
 		}
 	}
 

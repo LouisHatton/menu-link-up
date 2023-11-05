@@ -1,27 +1,27 @@
-package connections
+package files
 
 import "time"
 
-type ConnectionStatus string
+type FileStatus string
 
 const (
-	Active    ConnectionStatus = "active"
-	Deploying ConnectionStatus = "deploying"
-	Paused    ConnectionStatus = "paused"
-	Unhealthy ConnectionStatus = "unhealthy"
+	Active    FileStatus = "active"
+	Deploying FileStatus = "deploying"
+	Paused    FileStatus = "paused"
+	Unhealthy FileStatus = "unhealthy"
 )
 
-type Connection struct {
-	// Unique id which identifies the connection (can't change)
+type File struct {
+	// Unique id which identifies the file (can't change)
 	Id string `json:"id" firestore:"id"`
 
-	// Unique Id which identifies the connection - used for the url string (can change)
+	// Unique Id which identifies the file - used for the url string (can change)
 	UrlId     string                 `json:"urlId" firestore:"urlId"`
 	ProjectId string                 `json:"projectId" firestore:"projectId"`
 	Name      string                 `json:"name" firestore:"name"`
 	Metadata  Metadata               `json:"metadata" firestore:"metadata"`
 	Tags      []string               `json:"tags" firestore:"tags"`
-	Status    ConnectionStatus       `json:"status" firestore:"status"`
+	Status    FileStatus             `json:"status" firestore:"status"`
 	Schema    map[string]interface{} `json:"schema" firestore:"schema"`
 }
 
@@ -30,13 +30,13 @@ type Metadata struct {
 	CreatedAt time.Time `json:"createdAt" firestore:"createdAt"`
 }
 
-type NewConnection struct {
+type NewFile struct {
 	Name string   `json:"name"`
 	Tags []string `json:"tags"`
 }
 
-func Empty() Connection {
-	return Connection{
+func Empty() File {
+	return File{
 		Tags:   []string{},
 		Schema: map[string]interface{}{},
 	}

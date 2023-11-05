@@ -12,9 +12,9 @@ import (
 	apiMiddleware "github.com/LouisHatton/menu-link-up/internal/api/middleware"
 	"github.com/LouisHatton/menu-link-up/internal/config/appconfig"
 	"github.com/LouisHatton/menu-link-up/internal/config/environment"
-	connectionsStore "github.com/LouisHatton/menu-link-up/internal/connections/store"
-	connectionsStoreReader "github.com/LouisHatton/menu-link-up/internal/connections/store/reader"
-	connectionsStoreWriter "github.com/LouisHatton/menu-link-up/internal/connections/store/writer"
+	filesStore "github.com/LouisHatton/menu-link-up/internal/files/store"
+	filesStoreReader "github.com/LouisHatton/menu-link-up/internal/files/store/reader"
+	filesStoreWriter "github.com/LouisHatton/menu-link-up/internal/files/store/writer"
 	projectsStore "github.com/LouisHatton/menu-link-up/internal/projects/store"
 	projectsStoreReader "github.com/LouisHatton/menu-link-up/internal/projects/store/reader"
 	projectsStoreWriter "github.com/LouisHatton/menu-link-up/internal/projects/store/writer"
@@ -87,23 +87,23 @@ func main() {
 	}
 	projectStore := projectsStore.New(projectReader, projectsWriter)
 
-	// --- Connections Store
-	const ConnectionsStoreCollectionName = "connections"
-	connectionReader, err := connectionsStoreReader.New(logger, ConnectionsStoreCollectionName, store)
+	// --- Files Store
+	const FilesStoreCollectionName = "files"
+	fileReader, err := filesStoreReader.New(logger, FilesStoreCollectionName, store)
 	if err != nil {
-		logger.Fatal("error initializing connectionsStoreReader", zap.Error(err))
+		logger.Fatal("error initializing filesStoreReader", zap.Error(err))
 	}
 
-	connectionWriter, err := connectionsStoreWriter.New(logger, ConnectionsStoreCollectionName, store)
+	fileWriter, err := filesStoreWriter.New(logger, FilesStoreCollectionName, store)
 	if err != nil {
-		logger.Fatal("error initializing connectionsStoreWriter", zap.Error(err))
+		logger.Fatal("error initializing filesStoreWriter", zap.Error(err))
 	}
-	connectionStore := connectionsStore.New(connectionReader, connectionWriter)
+	fileStore := filesStore.New(fileReader, fileWriter)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
-	api, err := api.New(logger, cfg.Environment.CurrentEnv, authMiddleware, projectStore, connectionStore)
+	api, err := api.New(logger, cfg.Environment.CurrentEnv, authMiddleware, projectStore, fileStore)
 	if err != nil {
 		logger.Fatal("error initializing api", zap.Error(err))
 	}

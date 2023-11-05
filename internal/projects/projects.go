@@ -5,6 +5,7 @@ import "time"
 type Project struct {
 	Id             string   `json:"id" firestore:"id"`
 	Name           string   `json:"name" firestore:"name"`
+	Slug           string   `json:"slug" firestore:"slug"`
 	Metadata       Metadata `json:"metadata" firestore:"metadata"`
 	Config         Config   `json:"config" firestore:"config"`
 	AllUsers       []string `json:"users" firestore:"users"`

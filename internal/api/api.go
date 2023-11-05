@@ -8,7 +8,7 @@ import (
 	"github.com/LouisHatton/menu-link-up/internal/api/middleware"
 	"github.com/LouisHatton/menu-link-up/internal/api/routes"
 	"github.com/LouisHatton/menu-link-up/internal/config/environment"
-	connectionsStore "github.com/LouisHatton/menu-link-up/internal/connections/store"
+	filesStore "github.com/LouisHatton/menu-link-up/internal/files/store"
 	projectsStore "github.com/LouisHatton/menu-link-up/internal/projects/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
@@ -23,14 +23,14 @@ type API struct {
 	l                 *zap.Logger
 	config            *Config
 	projectStore      projectsStore.Manager
-	connectionStore   connectionsStore.Manager
+	fileStore         filesStore.Manager
 	born              time.Time
 	authMiddleware    middleware.Auth
 	projectMiddleware middleware.Project
 }
 
 func New(logger *zap.Logger, env environment.Type, authMiddleware *middleware.Auth, projectStore *projectsStore.Manager,
-	connectionStore *connectionsStore.Manager) (*API, error) {
+	fileStore *filesStore.Manager) (*API, error) {
 
 	projectMiddleware, err := middleware.NewProject(logger, &projectStore.Reader)
 	if err != nil {
@@ -44,7 +44,7 @@ func New(logger *zap.Logger, env environment.Type, authMiddleware *middleware.Au
 		l:                 logger,
 		config:            cfg,
 		projectStore:      *projectStore,
-		connectionStore:   *connectionStore,
+		fileStore:         *fileStore,
 		born:              time.Now(),
 		authMiddleware:    *authMiddleware,
 		projectMiddleware: *projectMiddleware,
@@ -70,11 +70,11 @@ func (api API) Register(r chi.Router) error {
 		r.Get(routes.ProjectPathPrefix, api.ListProjects)
 		r.Post(routes.ProjectPathPrefix, api.CreateProject)
 
-		r.With(api.projectMiddleware.Middleware).Get(routes.ConnectionIdPath, api.GetConnection)
-		r.With(api.projectMiddleware.Middleware).Post(routes.ConnectionIdPath, api.EditConnection)
-		r.With(api.projectMiddleware.Middleware).Delete(routes.ConnectionIdPath, api.DeleteConnection)
-		r.With(api.projectMiddleware.Middleware).Get(routes.CreateConnectionsPath, api.ListConnections)
-		r.With(api.projectMiddleware.Middleware).Post(routes.CreateConnectionsPath, api.CreateConnection)
+		r.With(api.projectMiddleware.Middleware).Get(routes.FileIdPath, api.GetFile)
+		r.With(api.projectMiddleware.Middleware).Post(routes.FileIdPath, api.EditFile)
+		r.With(api.projectMiddleware.Middleware).Delete(routes.FileIdPath, api.DeleteFile)
+		r.With(api.projectMiddleware.Middleware).Get(routes.CreateFilesPath, api.ListFiles)
+		r.With(api.projectMiddleware.Middleware).Post(routes.CreateFilesPath, api.CreateFile)
 
 	})
 
