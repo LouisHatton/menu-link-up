@@ -14,3 +14,8 @@ export function validatePassword(password: string) {
 	var re = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
 	return re.test(password);
 }
+
+export function sanitiseSlug(str: string) {
+	str = str.replace(/\s+/g, '-').toLowerCase();
+	return str;
+}

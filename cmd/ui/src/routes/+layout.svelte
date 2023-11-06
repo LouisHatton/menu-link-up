@@ -21,6 +21,7 @@
 		try {
 			const isInAuthRoute = $page.route.id?.includes('(authentication)');
 			const token = await AuthenticationService.getToken();
+			globalThis.jwt = token;
 			if (!token && !isInAuthRoute) {
 				await goto('/login');
 			} else if (token && isInAuthRoute) {

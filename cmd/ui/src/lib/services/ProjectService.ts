@@ -3,16 +3,12 @@ import NetworkService from './NetworkService';
 export type Project = {
 	id: string;
 	name: string;
+	slug: string;
 	metadata: ProjectMetadata;
-	config: ProjectConfig;
 	users: string[];
 	adminUsers: string[];
 	roUsers: string[];
 	rwUsers: string[];
-};
-
-export type ProjectConfig = {
-	colour: string;
 };
 
 export type ProjectMetadata = {
@@ -20,9 +16,22 @@ export type ProjectMetadata = {
 	createdAt: string;
 };
 
+export type NewProject = {
+	name: string;
+	slug: string;
+};
+
 export class ProjectService {
 	listProjects(): Promise<Project[]> {
 		return NetworkService.get('/api/v1/projects');
+	}
+
+	createProject(newProject: NewProject): Promise<Project[]> {
+		return NetworkService.post('/api/v1/projects', newProject);
+	}
+
+	checkProjectCreation(newProject: NewProject): Promise<boolean> {
+		return NetworkService.post('/api/v1/projects/check', newProject);
 	}
 }
 

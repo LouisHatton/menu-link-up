@@ -25,7 +25,7 @@
 
 {#if loading}
 	<div class={classnames('flex flex-row justify-center items-center', height)}>
-		<Spinner color="yellow" />
+		<Spinner color="blue" />
 	</div>
 {:else}
 	<slot />
