@@ -69,6 +69,7 @@ func (api API) Register(r chi.Router) error {
 		r.With(api.projectMiddleware.Middleware).Get(routes.ProjectIdPath, api.GetProject)
 		r.Get(routes.ProjectPathPrefix, api.ListProjects)
 		r.Post(routes.ProjectPathPrefix, api.CreateProject)
+		r.Post(routes.CheckProjectPath, api.CheckProjectSlug)
 
 		r.With(api.projectMiddleware.Middleware).Get(routes.FileIdPath, api.GetFile)
 		r.With(api.projectMiddleware.Middleware).Post(routes.FileIdPath, api.EditFile)

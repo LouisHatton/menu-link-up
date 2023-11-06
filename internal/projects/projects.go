@@ -3,19 +3,11 @@ package projects
 import "time"
 
 type Project struct {
-	Id             string   `json:"id" firestore:"id"`
-	Name           string   `json:"name" firestore:"name"`
-	Slug           string   `json:"slug" firestore:"slug"`
-	Metadata       Metadata `json:"metadata" firestore:"metadata"`
-	Config         Config   `json:"config" firestore:"config"`
-	AllUsers       []string `json:"users" firestore:"users"`
-	AdminUsers     []string `json:"adminUsers" firestore:"adminUsers"`
-	ReadOnlyUsers  []string `json:"roUsers" firestore:"roUsers"`
-	ReadWriteUsers []string `json:"rwUsers" firestore:"rwUsers"`
-}
-
-type Config struct {
-	Colour string `json:"colour" firestore:"colour"`
+	Id       string   `json:"id" firestore:"id"`
+	Name     string   `json:"name" firestore:"name"`
+	Slug     string   `json:"slug" firestore:"slug"`
+	Metadata Metadata `json:"metadata" firestore:"metadata"`
+	Users    []string `json:"users" firestore:"users"`
 }
 
 type Metadata struct {
@@ -24,15 +16,12 @@ type Metadata struct {
 }
 
 type NewProject struct {
-	Name   string `json:"name"`
-	Colour string `json:"colour"`
+	Name string `json:"name"`
+	Slug string `json:"slug"`
 }
 
 func Empty() *Project {
 	return &Project{
-		AllUsers:       []string{},
-		AdminUsers:     []string{},
-		ReadOnlyUsers:  []string{},
-		ReadWriteUsers: []string{},
+		Users: []string{},
 	}
 }

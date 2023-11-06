@@ -5,6 +5,7 @@ const (
 	ProjectUrlParam   = "/{projectId}"
 	ProjectPathPrefix = "/projects"
 	CreateProjectPath = ProjectPathPrefix
+	CheckProjectPath  = ProjectPathPrefix + "/check"
 	ProjectIdPath     = ProjectPathPrefix + ProjectUrlParam
 )
 

@@ -48,13 +48,12 @@ func (api API) CreateProject(w http.ResponseWriter, r *http.Request) {
 	newProject := projects.Project{
 		Id:   id,
 		Name: data.Name,
+		Slug: data.Slug,
 		Metadata: projects.Metadata{
 			CreatedBy: user.Id,
 			CreatedAt: time.Now(),
 		},
-		Config: projects.Config{
-			Colour: data.Colour,
-		},
+		Users: []string{user.Id},
 	}
 
 	if err := api.projectStore.Set(id, &newProject); err != nil {
@@ -65,6 +64,30 @@ func (api API) CreateProject(w http.ResponseWriter, r *http.Request) {
 
 	logger.Info("created new project")
 	render.Respond(w, r, &newProject)
+}
+
+func (api API) CheckProjectSlug(w http.ResponseWriter, r *http.Request) {
+	user := internalContext.GetUserFromContext(r.Context())
+	logger := api.l.With(zap.String("userId", user.Id))
+
+	data := projects.NewProject{}
+	if err := render.Decode(r, &data); err != nil {
+		logger.Error("error parsing provided project data", zap.Error(err))
+		render.Render(w, r, responses.ErrInvalidRequest(err))
+		return
+	}
+
+	_, err := api.projectStore.One(query.Options{}, query.Where{
+		Key:     "slug",
+		Matcher: query.EqualTo,
+		Value:   data.Slug,
+	})
+	if err != nil {
+		render.Respond(w, r, true)
+		return
+	}
+
+	render.Respond(w, r, false)
 }
 
 func (api API) ListProjects(w http.ResponseWriter, r *http.Request) {

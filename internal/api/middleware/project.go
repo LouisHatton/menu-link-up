@@ -48,7 +48,7 @@ func (m *Project) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		if !utils.Contains(project.AllUsers, user.Id) {
+		if !utils.Contains(project.Users, user.Id) {
 			logger.Info("user is not in requested project")
 			render.Render(w, r, responses.ErrForbidden())
 			return
