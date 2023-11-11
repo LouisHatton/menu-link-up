@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS files (
     updated_at TIMESTAMP NOT NULL,
     created_at TIMESTAMP NOT NULL,
     slug VARCHAR(255) NOT NULL,
+    s3_region VARCHAR(255) NOT NULL,
     s3_bucket VARCHAR(255) NOT NULL,
     s3_key VARCHAR(255) NOT NULL,
     PRIMARY KEY (id),

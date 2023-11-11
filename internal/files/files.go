@@ -1,6 +1,9 @@
 package files
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type File struct {
 	// Unique id which identifies the file (can't change)
@@ -13,6 +16,7 @@ type File struct {
 	Slug      string    `json:"slug"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
+	S3Region  string    `json:"s3Region"`
 	S3Bucket  string    `json:"s3Bucket"`
 	S3Key     string    `json:"s3Key"`
 }
@@ -24,4 +28,8 @@ type NewFile struct {
 
 func Empty() File {
 	return File{}
+}
+
+func (f File) GetUrl() string {
+	return fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", f.S3Bucket, f.S3Region, f.S3Key)
 }
