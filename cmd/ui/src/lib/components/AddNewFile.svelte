@@ -1,23 +1,45 @@
 <script lang="ts">
-	import type { Project } from '$lib/services/ProjectService';
+	import type { NewFile } from '$lib/services/FileService';
+	import FileService from '$lib/services/FileService';
+	import type { ApiError } from '$lib/services/NetworkService';
 	import { sanitiseSlug } from '$lib/util';
 	import { Button, Fileupload, Input, Modal, Select } from 'flowbite-svelte';
+	import { createEventDispatcher } from 'svelte';
 
 	export let large = false;
-	export let project: Project;
 
+	const dispatch = createEventDispatcher();
 	let openModal = false;
 
+	let slug = '';
 	let filename = '';
+	let slugChanged = false;
 
 	let fileuploadprops = {
-		id: 'user_avatar'
+		id: 'menu'
 	};
 
-	$: filename = sanitiseSlug(filename);
+	$: slug = sanitiseSlug(slug);
+	$: if (!slugChanged) {
+		slug = sanitiseSlug(filename);
+	}
+	// $: checkSlug(slug);
 
 	function handleModalClick() {
 		openModal = true;
+	}
+
+	async function createNewFile() {
+		let newFile: NewFile = {
+			name: filename,
+			slug
+		};
+		try {
+			await FileService.createFile(newFile);
+			dispatch('create');
+		} catch (err: unknown) {
+			alert(err as ApiError);
+		}
 	}
 </script>
 
@@ -34,13 +56,18 @@
 	<p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
 		To add a new file, give a unique filename and upload your pdf.
 	</p>
-	<!-- <p>
-		Project:
-		<Select bind:value={projectName} items={[{ name: 'pizza', value: 'pizza' }]} />
-	</p> -->
 	<p>
-		File Name: <span class="text-sm">(Must only contain lowercase letters and '-')</span>
+		Name:
 		<Input bind:value={filename} />
+	</p>
+	<p>
+		URL: <span class="text-sm">(Must only contain lowercase letters and '-')</span>
+		<Input
+			bind:value={slug}
+			on:change={() => {
+				slugChanged = true;
+			}}
+		/>
 	</p>
 	<p>
 		Upload file
@@ -48,11 +75,9 @@
 	</p>
 	<p class="text-base text-black dark:text-gray-400">
 		The file will be uploaded to: <br />
-		<span class="break-before-avoid text-blue-600"
-			>https://menulinkup.com/{project.name}/{filename}</span
-		>
+		<span class="break-before-avoid text-blue-600">https://menulinkup.com/{slug}</span>
 	</p>
 	<svelte:fragment slot="footer">
-		<Button on:click={() => alert('Handle "success"')}>Upload</Button>
+		<Button on:click={createNewFile}>Upload</Button>
 	</svelte:fragment>
 </Modal>

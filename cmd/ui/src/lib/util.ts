@@ -16,6 +16,11 @@ export function validatePassword(password: string) {
 }
 
 export function sanitiseSlug(str: string) {
-	str = str.replace(/\s+/g, '-').toLowerCase();
-	return str;
+	return str
+		.toLowerCase()
+		.replace(/_/g, '') // Remove underscores
+		.replace(/[^\w\s-]/g, '') // Remove non-word characters except spaces and hyphens
+		.trim() // Trim leading/trailing spaces
+		.replace(/\s+/g, '-') // Replace spaces with -
+		.replace(/-+/g, '-'); // Replace multiple - with single -
 }

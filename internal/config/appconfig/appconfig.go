@@ -11,6 +11,8 @@ type Server struct {
 }
 
 type Database struct {
-	ProjectsCollectionName string `env:"PROJECTS_COLLECTION_NAME" envDefault:"projects"`
-	FilesCollectionName    string `env:"FILES_COLLECTION_NAME" envDefault:"files"`
+	Name     string `env:"DATABASE_NAME" envDefault:"menulinkup"`
+	UserName string `env:"DATABASE_USER_NAME" envDefault:"adminer"`
+	Password string `env:"DATABASE_PASSWORD" envDefault:"adminer"`
+	Host     string `env:"DATABASE_HOST" envDefault:"localhost:5555"`
 }

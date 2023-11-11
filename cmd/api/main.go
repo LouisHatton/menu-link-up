@@ -2,26 +2,95 @@ package main
 
 import (
 	"context"
-
 	"net/http"
 
 	firebase "firebase.google.com/go/v4"
-	"go.uber.org/zap"
-
 	"github.com/LouisHatton/menu-link-up/internal/api"
-	apiMiddleware "github.com/LouisHatton/menu-link-up/internal/api/middleware"
+	api_middleware "github.com/LouisHatton/menu-link-up/internal/api/middleware"
 	"github.com/LouisHatton/menu-link-up/internal/config/appconfig"
 	"github.com/LouisHatton/menu-link-up/internal/config/environment"
-	filesStore "github.com/LouisHatton/menu-link-up/internal/files/store"
-	filesStoreReader "github.com/LouisHatton/menu-link-up/internal/files/store/reader"
-	filesStoreWriter "github.com/LouisHatton/menu-link-up/internal/files/store/writer"
-	projectsStore "github.com/LouisHatton/menu-link-up/internal/projects/store"
-	projectsStoreReader "github.com/LouisHatton/menu-link-up/internal/projects/store/reader"
-	projectsStoreWriter "github.com/LouisHatton/menu-link-up/internal/projects/store/writer"
-	"github.com/caarlos0/env/v8"
+	"github.com/LouisHatton/menu-link-up/internal/db/connection"
+	files_repository "github.com/LouisHatton/menu-link-up/internal/files/repository"
+	"github.com/caarlos0/env/v10"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	_ "github.com/go-sql-driver/mysql"
+	"go.uber.org/zap"
 )
+
+// func main() {
+// 	ctx := context.Background()
+// 	db, err := db_connection.Connect()
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	defer db.Close()
+
+// 	fileRepo := files_repository.New(db)
+
+// 	id := uuid.NewString()
+// 	ogFile := files.File{
+// 		ID:        id,
+// 		Name:      "Testing Menu",
+// 		UserId:    "123",
+// 		Slug:      "testing-menu",
+// 		CreatedAt: time.Now(),
+// 		UpdatedAt: time.Now(),
+// 		S3Bucket:  "files",
+// 		S3Key:     "testing-menu",
+// 	}
+
+// 	err = fileRepo.Create(ctx, &ogFile)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	fmt.Println("added file")
+
+// 	file, err := fileRepo.GetById(ctx, id)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	fmt.Println("fetched file: ", file)
+
+// 	file.Name = "Not Testing"
+// 	fmt.Println("setting file name: ", file.Name)
+// 	err = fileRepo.Update(ctx, file)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	newFile, err := fileRepo.GetById(ctx, id)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	fmt.Println("fetched file: ", newFile.Name)
+
+// 	err = fileRepo.DeleteById(ctx, id)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	fmt.Println("deleted file")
+
+// 	count, err := fileRepo.Count(ctx)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	fmt.Println("the count of files is: ", count)
+
+// 	files, err := fileRepo.GetByUserId(ctx, "123")
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	// fmt.Println("fetched all user files: ", files)
+// 	fmt.Println("count of user files: ", len(*files)+1)
+
+// }
 
 type config struct {
 	appconfig.Environment
@@ -33,8 +102,8 @@ func main() {
 
 	// --- ENV & Logging
 	ctx := context.Background()
-	cfg := &config{}
-	if err := env.Parse(cfg); err != nil {
+	cfg := config{}
+	if err := env.Parse(&cfg); err != nil {
 		panic("failed to parse server config env: " + err.Error())
 	}
 
@@ -64,45 +133,24 @@ func main() {
 		logger.Fatal("error initializing app auth", zap.Error(err))
 	}
 
-	store, err := app.Firestore(ctx)
-	if err != nil {
-		logger.Fatal("error initializing firestore", zap.Error(err))
-	}
-
 	// --- Middleware
-	authMiddleware, err := apiMiddleware.NewAuth(logger, authClient)
+	authMiddleware, err := api_middleware.NewAuth(logger, authClient)
 	if err != nil {
 		logger.Fatal("error initializing auth middleware", zap.Error(err))
 	}
 
-	// --- Projects Store
-	projectReader, err := projectsStoreReader.New(logger, cfg.ProjectsCollectionName, store)
+	db, err := connection.Connect(&cfg.Database)
 	if err != nil {
-		logger.Fatal("error initializing projectsStoreReader", zap.Error(err))
+		panic(err)
 	}
+	defer db.Close()
 
-	projectsWriter, err := projectsStoreWriter.New(logger, cfg.ProjectsCollectionName, store)
-	if err != nil {
-		logger.Fatal("error initializing projectsStoreReader", zap.Error(err))
-	}
-	projectStore := projectsStore.New(projectReader, projectsWriter)
-
-	// --- Files Store
-	fileReader, err := filesStoreReader.New(logger, cfg.FilesCollectionName, store)
-	if err != nil {
-		logger.Fatal("error initializing filesStoreReader", zap.Error(err))
-	}
-
-	fileWriter, err := filesStoreWriter.New(logger, cfg.FilesCollectionName, store)
-	if err != nil {
-		logger.Fatal("error initializing filesStoreWriter", zap.Error(err))
-	}
-	fileStore := filesStore.New(fileReader, fileWriter)
+	fileRepo := files_repository.New(db)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
-	api, err := api.New(logger, cfg.Environment.CurrentEnv, authMiddleware, projectStore, fileStore)
+	api, err := api.New(logger, cfg.Environment.CurrentEnv, authMiddleware, fileRepo)
 	if err != nil {
 		logger.Fatal("error initializing api", zap.Error(err))
 	}

@@ -1,12 +1,25 @@
+version: "3.8"
 services:
-  api:
-    container_name: menu-link-up
-    build:
-      context: .
-      dockerfile: ./docker/api/Dockerfile
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb
+    restart: always
     environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=../../.local/local-secrets.json
-    env_file:
-      - .env.local
+      MYSQL_USER: adminer
+      MYSQL_PASSWORD: adminer
+      MYSQL_DATABASE: menulinkup
+      MARIADB_ROOT_PASSWORD: password
     ports:
-      - 8080:8080
+      - 5555:3306
+    volumes:
+      - db_data:/var/lib/mysql
+  adminer:
+    image: adminer:latest
+    container_name: adminer
+    environment:
+      ADMINER_DEFAULT_SERVER: mariadb
+    restart: always
+    ports:
+      - 7777:8080
+volumes:
+  db_data:

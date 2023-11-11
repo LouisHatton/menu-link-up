@@ -1,13 +1,11 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import AddNewFile from '$lib/components/AddNewFile.svelte';
 	import Card from '$lib/components/Card.svelte';
-	import LoadingScreen from '$lib/components/LoadingScreen.svelte';
 	import PageLoader from '$lib/components/PageLoader.svelte';
 	import PageWrapper from '$lib/components/PageWrapper.svelte';
 	import CheckMark from '$lib/icons/CheckMark.svelte';
-	import type { Project } from '$lib/services/ProjectService';
-	import ProjectService from '$lib/services/ProjectService';
+	import type { File } from '$lib/services/FileService';
+	import FileService from '$lib/services/FileService';
 	import { authStore } from '$lib/stores/authStore';
 	import {
 		Button,
@@ -20,17 +18,13 @@
 	} from 'flowbite-svelte';
 
 	let loading = false;
-	let projects: Project[] = [];
+	let files: File[] = [];
 
 	$: getProjects();
 	async function getProjects() {
 		loading = true;
 		try {
-			let response = await ProjectService.listProjects();
-			if (response.length == 0) {
-				goto('/create-project');
-			}
-			projects = response;
+			files = await FileService.listFiles();
 		} finally {
 			loading = false;
 		}
@@ -54,27 +48,27 @@
 						<TableHeadCell />
 					</TableHead>
 					<TableBody>
-						<!-- <TableBodyRow>
-						<TableBodyCell>A La Carte Menu</TableBodyCell>
-						<TableBodyCell
-							><a
-								class="text-blue-600 hover:underline"
-								target="_blank"
-								href="https://menulinkup.com/pizza-place/a-la-carte-menu"
-								>https://menulinkup.com/pizza-place/a-la-carte-menu</a
-							></TableBodyCell
-						>
-						<TableBodyCell><CheckMark class="fill-current text-green-500 w-7" /></TableBodyCell>
-						<TableBodyCell><Button>Edit</Button></TableBodyCell>
-					</TableBodyRow> -->
+						{#each files as file}
+							<TableBodyRow>
+								<TableBodyCell>{file.name}</TableBodyCell>
+								<TableBodyCell
+									><a
+										class="text-blue-600 hover:underline"
+										target="_blank"
+										href={'https://menulinkup.com/' + file.slug}
+										>https://menulinkup.com/{file.slug}</a
+									></TableBodyCell
+								>
+								<TableBodyCell><CheckMark class="fill-current text-green-500 w-7" /></TableBodyCell>
+								<TableBodyCell><Button>Edit</Button></TableBodyCell>
+							</TableBodyRow>
+						{/each}
 					</TableBody>
 				</Table>
-				{#if projects.length > 0}
-					<div class="mt-4">
-						<AddNewFile large project={projects[0]} />
-					</div>
-				{/if}
-				<!-- <pre>{JSON.stringify(projects, undefined, 2)}</pre> -->
+				<div class="mt-4">
+					<AddNewFile large={files.length < 1} on:create={getProjects} />
+				</div>
+				<!-- <pre>{JSON.stringify(files, undefined, 2)}</pre> -->
 			</PageLoader>
 		</Card>
 	</div>

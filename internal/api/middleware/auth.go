@@ -8,7 +8,6 @@ import (
 	"firebase.google.com/go/v4/auth"
 	"github.com/LouisHatton/menu-link-up/internal/api/responses"
 	internalContext "github.com/LouisHatton/menu-link-up/internal/context"
-	"github.com/LouisHatton/menu-link-up/internal/users"
 	"github.com/go-chi/render"
 	"go.uber.org/zap"
 )
@@ -42,19 +41,9 @@ func (m *Auth) Middleware(next http.Handler) http.Handler {
 			render.Render(w, r, responses.ErrUnauthorised())
 			return
 		}
-
 		userId := token.UID
-		logger := m.logger.With(zap.String("userId", userId))
 
-		authUser, err := m.client.GetUser(ctx, userId)
-		if err != nil {
-			logger.Info("could not get user from id in token", zap.Error(err))
-			render.Render(w, r, responses.ErrInternalServerError())
-			return
-		}
-
-		realUser := users.AuthUserRecordToUser(authUser)
-		ctx = internalContext.AddUserToContext(ctx, realUser)
+		ctx = internalContext.AddUserIdToContext(ctx, userId)
 
 		next.ServeHTTP(w, r.Clone(ctx))
 	})

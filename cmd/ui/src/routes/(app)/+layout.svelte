@@ -1,6 +1,5 @@
 <script>
 	import Navbar from './Navbar.svelte';
-	import Sidebar from './Sidebar.svelte';
 </script>
 
 <!-- <section

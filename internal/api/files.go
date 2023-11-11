@@ -8,7 +8,6 @@ import (
 	"github.com/LouisHatton/menu-link-up/internal/api/responses"
 	"github.com/LouisHatton/menu-link-up/internal/api/routes"
 	internalContext "github.com/LouisHatton/menu-link-up/internal/context"
-	"github.com/LouisHatton/menu-link-up/internal/db/query"
 	"github.com/LouisHatton/menu-link-up/internal/files"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
@@ -18,15 +17,8 @@ import (
 
 func (api *API) GetFile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	user := internalContext.GetUserFromContext(ctx)
-	logger := api.l.With(zap.String("userId", user.Id))
-	project, ok := internalContext.GetProjectFromContext(ctx)
-	if !ok {
-		logger.Error("unable to get project from context")
-		render.Render(w, r, responses.ErrInternalServerError())
-		return
-	}
-	logger = logger.With(zap.String("projectId", project.Id))
+	userId := internalContext.GetUserIdFromContext(ctx)
+	logger := api.l.With(zap.String("userId", userId))
 
 	id, err := getFileIdFromUrl(r)
 	if err != nil {
@@ -36,15 +28,9 @@ func (api *API) GetFile(w http.ResponseWriter, r *http.Request) {
 	}
 	logger = logger.With(zap.String("fileId", id))
 
-	file, err := api.fileStore.Get(id)
+	file, err := api.fileStore.GetById(ctx, id)
 	if err != nil {
 		logger.Error("error getting document", zap.Error(err))
-		render.Render(w, r, responses.NotFoundResponse("file"))
-		return
-	}
-
-	if file.ProjectId != project.Id {
-		logger.Warn("file is not a member of the project")
 		render.Render(w, r, responses.NotFoundResponse("file"))
 		return
 	}
@@ -54,14 +40,8 @@ func (api *API) GetFile(w http.ResponseWriter, r *http.Request) {
 
 func (api *API) CreateFile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	user := internalContext.GetUserFromContext(ctx)
-	project, ok := internalContext.GetProjectFromContext(ctx)
-	if !ok {
-		api.l.Error("unable to get project from context")
-		render.Render(w, r, responses.ErrInternalServerError())
-		return
-	}
-	logger := api.l.With(zap.String("userId", user.Id), zap.String("projectId", project.Id))
+	userId := internalContext.GetUserIdFromContext(ctx)
+	logger := api.l.With(zap.String("userId", userId))
 
 	data := files.NewFile{}
 	if err := render.Decode(r, &data); err != nil {
@@ -73,17 +53,15 @@ func (api *API) CreateFile(w http.ResponseWriter, r *http.Request) {
 	id := uuid.New().String()
 	logger = logger.With(zap.String("fileId", id))
 	newFile := files.File{
-		Id:        id,
+		ID:        id,
 		Slug:      data.Slug,
-		ProjectId: project.Id,
 		Name:      data.Name,
-		Metadata: files.Metadata{
-			CreatedBy: user.Id,
-			CreatedAt: time.Now(),
-		},
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		UserId:    userId,
 	}
 
-	if err := api.fileStore.Set(id, &newFile); err != nil {
+	if err := api.fileStore.Create(ctx, &newFile); err != nil {
 		logger.Error("failed to store new file", zap.Error(err))
 		render.Render(w, r, responses.ErrInternalServerError())
 		return
@@ -95,41 +73,26 @@ func (api *API) CreateFile(w http.ResponseWriter, r *http.Request) {
 
 func (api *API) ListFiles(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	user := internalContext.GetUserFromContext(ctx)
-	project, ok := internalContext.GetProjectFromContext(ctx)
-	if !ok {
-		api.l.Error("unable to get project from context")
-		render.Render(w, r, responses.ErrInternalServerError())
-		return
-	}
-	logger := api.l.With(zap.String("userId", user.Id), zap.String("projectId", project.Id))
+	userId := internalContext.GetUserIdFromContext(ctx)
+	logger := api.l.With(zap.String("userId", userId))
 
-	docs, err := api.fileStore.Many(query.Options{}, query.Where{
-		Key:     "projectId",
-		Matcher: query.EqualTo,
-		Value:   project.Id,
-	})
+	logger.Debug("getting files")
+
+	docs, err := api.fileStore.GetByUserId(ctx, userId)
 	if err != nil {
-		logger.Fatal("failed to fetch files", zap.Error(err))
+		logger.Error("failed to fetch files", zap.Error(err))
 		render.Render(w, r, responses.ErrInternalServerError())
 		return
 	}
 
-	logger.Debug("number of docs returned", zap.Int("count", len(*docs)))
-
-	render.JSON(w, r, docs)
+	render.JSON(w, r, &docs)
 }
 
 func (api *API) EditFile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	user := internalContext.GetUserFromContext(ctx)
-	project, ok := internalContext.GetProjectFromContext(ctx)
-	if !ok {
-		api.l.Error("unable to get project from context")
-		render.Render(w, r, responses.ErrInternalServerError())
-		return
-	}
-	logger := api.l.With(zap.String("userId", user.Id), zap.String("projectId", project.Id))
+	userId := internalContext.GetUserIdFromContext(ctx)
+
+	logger := api.l.With(zap.String("userId", userId))
 
 	newFile := files.NewFile{}
 	if err := render.Decode(r, &newFile); err != nil {
@@ -146,22 +109,16 @@ func (api *API) EditFile(w http.ResponseWriter, r *http.Request) {
 	}
 	logger = logger.With(zap.String("fileId", id))
 
-	file, err := api.fileStore.Get(id)
+	file, err := api.fileStore.GetById(ctx, id)
 	if err != nil {
 		logger.Error("error getting document", zap.Error(err))
 		render.Render(w, r, responses.NotFoundResponse("file"))
 		return
 	}
 
-	if file.ProjectId != project.Id {
-		logger.Warn("file is not a member of the project")
-		render.Render(w, r, responses.NotFoundResponse("file"))
-		return
-	}
-
 	file.Name = newFile.Name
 
-	if err := api.fileStore.Set(id, file); err != nil {
+	if err := api.fileStore.Update(ctx, file); err != nil {
 		logger.Error("failed to store file", zap.Error(err))
 		render.Render(w, r, responses.ErrInternalServerError())
 		return
@@ -173,14 +130,8 @@ func (api *API) EditFile(w http.ResponseWriter, r *http.Request) {
 
 func (api *API) DeleteFile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	user := internalContext.GetUserFromContext(ctx)
-	project, ok := internalContext.GetProjectFromContext(ctx)
-	if !ok {
-		api.l.Error("unable to get project from context")
-		render.Render(w, r, responses.ErrInternalServerError())
-		return
-	}
-	logger := api.l.With(zap.String("userId", user.Id), zap.String("projectId", project.Id))
+	userId := internalContext.GetUserIdFromContext(ctx)
+	logger := api.l.With(zap.String("userId", userId))
 
 	id, err := getFileIdFromUrl(r)
 	if err != nil {
@@ -190,20 +141,14 @@ func (api *API) DeleteFile(w http.ResponseWriter, r *http.Request) {
 	}
 	logger = logger.With(zap.String("fileId", id))
 
-	file, err := api.fileStore.Get(id)
+	file, err := api.fileStore.GetById(ctx, id)
 	if err != nil {
 		logger.Error("error getting document", zap.Error(err))
 		render.Render(w, r, responses.NotFoundResponse("file"))
 		return
 	}
 
-	if file.ProjectId != project.Id {
-		logger.Warn("file is not a member of the project")
-		render.Render(w, r, responses.NotFoundResponse("file"))
-		return
-	}
-
-	err = api.fileStore.Delete(file.Id)
+	err = api.fileStore.DeleteById(ctx, file.ID)
 	if err != nil {
 		logger.Error("error deleting file", zap.Error(err))
 		render.Render(w, r, responses.ErrInternalServerError())

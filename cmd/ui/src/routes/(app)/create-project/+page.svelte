@@ -6,7 +6,7 @@
 	import UrlCheck from '$lib/components/UrlCheck.svelte';
 	import CheckMark from '$lib/icons/CheckMark.svelte';
 	import type { ApiError } from '$lib/services/NetworkService';
-	import ProjectService from '$lib/services/ProjectService';
+	import ProjectService from '$lib/services/FileService';
 	import { sanitiseSlug } from '$lib/util';
 	import { Button, Input } from 'flowbite-svelte';
 
@@ -39,7 +39,7 @@
 			console.log('checking slug %s', slug);
 
 			try {
-				slugOk = await ProjectService.checkProjectCreation({
+				slugOk = await ProjectService.checkFileSlug({
 					name: projectName,
 					slug: slug
 				});
@@ -53,7 +53,7 @@
 		creating = true;
 		error = '';
 		try {
-			await ProjectService.createProject({
+			await ProjectService.createFile({
 				name: projectName,
 				slug
 			});

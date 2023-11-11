@@ -1,5 +1,4 @@
 <script>
-	import ProjectPicker from '$lib/components/ProjectPicker/ProjectPicker.svelte';
 	import BarChart from '$lib/icons/BarChart.svelte';
 	import DashboardIcon from '$lib/icons/DashboardIcon.svelte';
 	import LifeBuoy from '$lib/icons/LifeBuoy.svelte';

@@ -1,15 +1,13 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/LouisHatton/menu-link-up/internal/api/middleware"
 	"github.com/LouisHatton/menu-link-up/internal/api/routes"
 	"github.com/LouisHatton/menu-link-up/internal/config/environment"
-	filesStore "github.com/LouisHatton/menu-link-up/internal/files/store"
-	projectsStore "github.com/LouisHatton/menu-link-up/internal/projects/store"
+	"github.com/LouisHatton/menu-link-up/internal/files"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"go.uber.org/zap"
@@ -20,34 +18,25 @@ type Config struct {
 }
 
 type API struct {
-	l                 *zap.Logger
-	config            *Config
-	projectStore      projectsStore.Manager
-	fileStore         filesStore.Manager
-	born              time.Time
-	authMiddleware    middleware.Auth
-	projectMiddleware middleware.Project
+	l              *zap.Logger
+	config         *Config
+	fileStore      files.Repository
+	born           time.Time
+	authMiddleware middleware.Auth
 }
 
-func New(logger *zap.Logger, env environment.Type, authMiddleware *middleware.Auth, projectStore *projectsStore.Manager,
-	fileStore *filesStore.Manager) (*API, error) {
-
-	projectMiddleware, err := middleware.NewProject(logger, &projectStore.Reader)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create project middleware: %w", err)
-	}
+func New(logger *zap.Logger, env environment.Type, authMiddleware *middleware.Auth,
+	fileStore files.Repository) (*API, error) {
 
 	cfg := &Config{
 		env: env,
 	}
 	api := API{
-		l:                 logger,
-		config:            cfg,
-		projectStore:      *projectStore,
-		fileStore:         *fileStore,
-		born:              time.Now(),
-		authMiddleware:    *authMiddleware,
-		projectMiddleware: *projectMiddleware,
+		l:              logger,
+		config:         cfg,
+		fileStore:      fileStore,
+		born:           time.Now(),
+		authMiddleware: *authMiddleware,
 	}
 
 	return &api, nil
@@ -66,16 +55,11 @@ func (api API) Register(r chi.Router) error {
 
 		r.Use(api.authMiddleware.Middleware)
 
-		r.With(api.projectMiddleware.Middleware).Get(routes.ProjectIdPath, api.GetProject)
-		r.Get(routes.ProjectPathPrefix, api.ListProjects)
-		r.Post(routes.ProjectPathPrefix, api.CreateProject)
-		r.Post(routes.CheckProjectPath, api.CheckProjectSlug)
-
-		r.With(api.projectMiddleware.Middleware).Get(routes.FileIdPath, api.GetFile)
-		r.With(api.projectMiddleware.Middleware).Post(routes.FileIdPath, api.EditFile)
-		r.With(api.projectMiddleware.Middleware).Delete(routes.FileIdPath, api.DeleteFile)
-		r.With(api.projectMiddleware.Middleware).Get(routes.CreateFilesPath, api.ListFiles)
-		r.With(api.projectMiddleware.Middleware).Post(routes.CreateFilesPath, api.CreateFile)
+		r.Get(routes.FileIdPath, api.GetFile)
+		r.Post(routes.FileIdPath, api.EditFile)
+		r.Delete(routes.FileIdPath, api.DeleteFile)
+		r.Get(routes.CreateFilesPath, api.ListFiles)
+		r.Post(routes.CreateFilesPath, api.CreateFile)
 
 	})
 

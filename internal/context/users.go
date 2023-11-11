@@ -2,14 +2,12 @@ package context
 
 import (
 	"context"
-
-	"github.com/LouisHatton/menu-link-up/internal/users"
 )
 
-func AddUserToContext(ctx context.Context, user users.User) context.Context {
-	return context.WithValue(ctx, userContextKey, user)
+func AddUserIdToContext(ctx context.Context, userId string) context.Context {
+	return context.WithValue(ctx, userIdContextKey, userId)
 }
 
-func GetUserFromContext(ctx context.Context) users.User {
-	return ctx.Value(userContextKey).(users.User)
+func GetUserIdFromContext(ctx context.Context) string {
+	return ctx.Value(userIdContextKey).(string)
 }

@@ -1,6 +1,5 @@
 import { env } from '$env/dynamic/public';
 import { authStore } from '$lib/stores/authStore';
-import { activeProject, projectStore } from '$lib/stores/projectStore';
 import { initializeApp, type FirebaseApp, type FirebaseOptions } from 'firebase/app';
 import {
 	getAuth,
@@ -57,8 +56,6 @@ class AuthenticationService {
 	}
 
 	async logOut() {
-		projectStore.set(undefined);
-		activeProject.set(undefined);
 		return this.auth.signOut();
 	}
 
