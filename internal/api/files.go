@@ -117,6 +117,7 @@ func (api *API) EditFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	file.Name = newFile.Name
+	file.Slug = newFile.Slug
 
 	if err := api.fileStore.Update(ctx, file); err != nil {
 		logger.Error("failed to store file", zap.Error(err))
@@ -145,6 +146,12 @@ func (api *API) DeleteFile(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Error("error getting document", zap.Error(err))
 		render.Render(w, r, responses.NotFoundResponse("file"))
+		return
+	}
+
+	if file.UserId != userId {
+		logger.Warn("attempting to delete file user does not own")
+		render.Render(w, r, responses.ErrForbidden())
 		return
 	}
 
