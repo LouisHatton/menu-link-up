@@ -8,16 +8,16 @@ import (
 	"firebase.google.com/go/v4/auth"
 	"github.com/LouisHatton/menu-link-up/internal/api/responses"
 	internalContext "github.com/LouisHatton/menu-link-up/internal/context"
+	"github.com/LouisHatton/menu-link-up/internal/log"
 	"github.com/go-chi/render"
-	"go.uber.org/zap"
 )
 
 type Auth struct {
 	client *auth.Client
-	logger *zap.Logger
+	logger *log.Logger
 }
 
-func NewAuth(l *zap.Logger, client *auth.Client) (*Auth, error) {
+func NewAuth(l *log.Logger, client *auth.Client) (*Auth, error) {
 	return &Auth{
 		client: client,
 		logger: l,
@@ -30,14 +30,14 @@ func (m *Auth) Middleware(next http.Handler) http.Handler {
 
 		providedToken, err := extractBearerToken(r)
 		if err != nil {
-			m.logger.Info("failed to extract bearer token", zap.Error(err))
+			m.logger.Info("failed to extract bearer token", log.Error(err))
 			render.Render(w, r, responses.ErrUnauthorised())
 			return
 		}
 
 		token, err := m.client.VerifyIDToken(ctx, providedToken)
 		if err != nil {
-			m.logger.Info("token provided is invalid", zap.Error(err))
+			m.logger.Info("token provided is invalid", log.Error(err))
 			render.Render(w, r, responses.ErrUnauthorised())
 			return
 		}

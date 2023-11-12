@@ -8,9 +8,9 @@ import (
 	"github.com/LouisHatton/menu-link-up/internal/api/routes"
 	"github.com/LouisHatton/menu-link-up/internal/config/environment"
 	"github.com/LouisHatton/menu-link-up/internal/files"
+	"github.com/LouisHatton/menu-link-up/internal/log"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
-	"go.uber.org/zap"
 )
 
 type Config struct {
@@ -18,15 +18,14 @@ type Config struct {
 }
 
 type API struct {
-	l              *zap.Logger
+	l              *log.Logger
 	config         *Config
-	fileStore      files.Repository
+	fileSvc        files.Service
 	born           time.Time
 	authMiddleware middleware.Auth
 }
 
-func New(logger *zap.Logger, env environment.Type, authMiddleware *middleware.Auth,
-	fileStore files.Repository) (*API, error) {
+func New(logger *log.Logger, env environment.Type, authMiddleware *middleware.Auth, fileSvc files.Service) (*API, error) {
 
 	cfg := &Config{
 		env: env,
@@ -34,7 +33,7 @@ func New(logger *zap.Logger, env environment.Type, authMiddleware *middleware.Au
 	api := API{
 		l:              logger,
 		config:         cfg,
-		fileStore:      fileStore,
+		fileSvc:        fileSvc,
 		born:           time.Now(),
 		authMiddleware: *authMiddleware,
 	}

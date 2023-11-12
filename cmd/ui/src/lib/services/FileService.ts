@@ -16,13 +16,31 @@ export type NewFile = {
 	slug: string;
 };
 
+export type FileUpload = {
+	url: string;
+};
+
 export class FileService {
 	listFiles(): Promise<File[]> {
 		return NetworkService.get('/api/v1/files');
 	}
 
-	createFile(newFile: NewFile): Promise<File> {
+	createFile(newFile: NewFile): Promise<FileUpload> {
 		return NetworkService.post('/api/v1/files', newFile);
+	}
+
+	uploadFile(url: string, file: BodyInit): Promise<Response> {
+		return fetch(url, {
+			method: 'PUT',
+			body: file,
+			headers: {
+				'content-type': 'application/pdf'
+			}
+		});
+	}
+
+	deleteFile(fileId: string): Promise<{}> {
+		return NetworkService.delete(`/api/v1/files/${fileId}`);
 	}
 
 	checkFileSlug(newFile: NewFile): Promise<boolean> {

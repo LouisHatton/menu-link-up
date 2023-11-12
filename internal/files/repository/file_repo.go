@@ -38,6 +38,20 @@ func selectAllScan(rows *sql.Rows) (files.File, error) {
 	return file, err
 }
 
+func (r *FileRepo) Ping() error {
+	err := r.db.Ping()
+	if err != nil {
+		return err
+	}
+
+	_, err = r.db.Exec("select 1 from `files` limit 1")
+	if err != nil {
+		return fmt.Errorf("attempting to check if table `files` exists: %w", err)
+	}
+
+	return nil
+}
+
 // Count implements files.Repository.
 func (r *FileRepo) Count(ctx context.Context) (int, error) {
 	query := "SELECT COUNT(`id`) FROM `files`"
@@ -84,7 +98,7 @@ func (r *FileRepo) GetById(ctx context.Context, id string) (*files.File, error) 
 	defer results.Close()
 
 	if !results.Next() {
-		return nil, fmt.Errorf("failed to get file by id")
+		return nil, files.ErrFileNotFound
 	}
 
 	file, err := selectAllScan(results)
@@ -118,7 +132,7 @@ func (r *FileRepo) GetBySlug(ctx context.Context, slug string) (*files.File, err
 
 // GetByUserId implements files.Repository.
 func (r *FileRepo) GetByUserId(ctx context.Context, userId string) (*[]files.File, error) {
-	query := selectAll + "WHERE `user_id` = ?"
+	query := selectAll + "WHERE `user_id` = ? ORDER BY `created_at` DESC"
 
 	results, err := r.db.QueryContext(ctx, query, userId)
 	if err != nil {

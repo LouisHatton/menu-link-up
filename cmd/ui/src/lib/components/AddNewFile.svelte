@@ -15,6 +15,8 @@
 	let filename = '';
 	let slugChanged = false;
 
+	let uploadedFiles: FileList;
+
 	let fileuploadprops = {
 		id: 'menu'
 	};
@@ -34,11 +36,21 @@
 			name: filename,
 			slug
 		};
+
+		if (uploadedFiles.length < 1) {
+			alert('no file selected');
+		}
+
 		try {
-			await FileService.createFile(newFile);
-			dispatch('create');
+			let url = await FileService.createFile(newFile);
+			if (url.url == '') {
+				alert('no url returned');
+			} else {
+				await FileService.uploadFile(url.url, uploadedFiles[0]);
+				dispatch('create');
+			}
 		} catch (err: unknown) {
-			alert(err as ApiError);
+			alert((err as ApiError).message);
 		}
 	}
 </script>
@@ -52,7 +64,7 @@
 {:else}
 	<Button on:click={handleModalClick}>Add New</Button>
 {/if}
-<Modal title="Add New" bind:open={openModal} class="lg:w-[80%]" autoclose>
+<Modal title="Add New" bind:open={openModal} class="lg:w-[80%]">
 	<p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
 		To add a new file, give a unique filename and upload your pdf.
 	</p>
@@ -71,7 +83,7 @@
 	</p>
 	<p>
 		Upload file
-		<Fileupload {...fileuploadprops} accept="application/pdf" />
+		<Fileupload {...fileuploadprops} accept="application/pdf" bind:files={uploadedFiles} />
 	</p>
 	<p class="text-base text-black dark:text-gray-400">
 		The file will be uploaded to: <br />

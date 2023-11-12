@@ -1,6 +1,7 @@
 <script lang="ts">
 	import AddNewFile from '$lib/components/AddNewFile.svelte';
 	import Card from '$lib/components/Card.svelte';
+	import DeleteFile from '$lib/components/DeleteFile.svelte';
 	import PageLoader from '$lib/components/PageLoader.svelte';
 	import PageWrapper from '$lib/components/PageWrapper.svelte';
 	import CheckMark from '$lib/icons/CheckMark.svelte';
@@ -60,7 +61,12 @@
 									></TableBodyCell
 								>
 								<TableBodyCell><CheckMark class="fill-current text-green-500 w-7" /></TableBodyCell>
-								<TableBodyCell><Button>Edit</Button></TableBodyCell>
+								<TableBodyCell>
+									<div class="flex flex-row gap-x-4">
+										<Button>Edit</Button>
+										<DeleteFile {file} on:delete={getProjects} />
+									</div>
+								</TableBodyCell>
 							</TableBodyRow>
 						{/each}
 					</TableBody>

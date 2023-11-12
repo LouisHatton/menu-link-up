@@ -2,37 +2,153 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"time"
 
+	internalContext "github.com/LouisHatton/menu-link-up/internal/context"
 	"github.com/LouisHatton/menu-link-up/internal/files"
+	"github.com/LouisHatton/menu-link-up/internal/log"
+	"github.com/LouisHatton/menu-link-up/internal/objectstore"
+	"github.com/google/uuid"
 )
 
 type FileSvc struct {
-	repo files.Repository
+	fileRepo    files.Repository
+	objStoreSvc objectstore.Service
+	logger      *log.Logger
+}
+
+func New(logger *log.Logger, fileRepo files.Repository, objStoreSvc objectstore.Service) (*FileSvc, error) {
+	err := fileRepo.Ping()
+	if err != nil {
+		return nil, err
+	}
+
+	return &FileSvc{
+		fileRepo:    fileRepo,
+		logger:      logger,
+		objStoreSvc: objStoreSvc,
+	}, nil
 }
 
 // Create implements files.Service.
-func (*FileSvc) Create(ctx context.Context, newFile files.NewFile) (*files.File, error) {
-	panic("unimplemented")
+func (svc *FileSvc) Create(ctx context.Context, userId string, newFile files.NewFile) (*files.FileUpload, error) {
+	logger := svc.logger.With(log.UserId(userId), log.Context(ctx))
+
+	location, err := svc.objStoreSvc.GenerateFileLocation(ctx)
+	if err != nil {
+		msg := "attempting to generate objectstore location"
+		logger.Error(msg, log.Error(err))
+		return nil, fmt.Errorf(msg+": %w", err)
+	}
+
+	id := uuid.NewString()
+	file := files.File{
+		ID:        id,
+		UserId:    userId,
+		Name:      newFile.Name,
+		Slug:      newFile.Slug,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		S3Region:  location.Region,
+		S3Bucket:  location.Bucket,
+		S3Key:     location.Key,
+	}
+
+	err = svc.fileRepo.Create(ctx, &file)
+	if err != nil {
+		msg := "failed to create new file"
+		logger.Error(msg, log.Error(err))
+		return nil, fmt.Errorf(msg+": %w", err)
+	}
+	logger.Info("new file created", log.FileId(id))
+
+	url, err := svc.objStoreSvc.PresignedPut(ctx, location, 15*time.Minute)
+	if err != nil {
+		msg := "attempting to create put url"
+		logger.Warn(msg, log.Error(err))
+		return &files.FileUpload{}, nil
+	}
+
+	return &files.FileUpload{
+		Url: url,
+	}, nil
 }
 
 // Delete implements files.Service.
-func (*FileSvc) Delete(ctx context.Context, id string) error {
-	panic("unimplemented")
+func (svc *FileSvc) Delete(ctx context.Context, id string) error {
+	userId := internalContext.GetUserIdFromContext(ctx)
+	logger := svc.logger.With(log.UserId(userId), log.FileId(id), log.Context(ctx))
+
+	file, err := svc.fileRepo.GetById(ctx, id)
+	if err != nil {
+		logger.Error("unable to get file to delete", log.Error(err))
+		return err
+	}
+
+	if file.UserId != userId {
+		logger.Warn("user attempting to delete file they do not own")
+		return files.ErrNotUsersFile
+	}
+
+	err = svc.fileRepo.DeleteById(ctx, id)
+	if err != nil {
+		msg := "failed to delete file"
+		logger.Error(msg, log.Error(err))
+		return fmt.Errorf(msg+": %w", err)
+	}
+
+	err = svc.objStoreSvc.DeleteFile(ctx, objectstore.FileLocation{
+		Bucket: file.S3Bucket,
+		Region: file.S3Region,
+		Key:    file.S3Key,
+	})
+	if err != nil {
+		logger.Warn("failed to delete file from object store", log.Error(err))
+	}
+
+	logger.Info("file deleted")
+	return nil
 }
 
 // Edit implements files.Service.
-func (*FileSvc) Edit(ctx context.Context, id string, newFile files.NewFile) error {
-	panic("unimplemented")
+func (svc *FileSvc) Edit(ctx context.Context, id string, newFile files.NewFile) error {
+	userId := internalContext.GetUserIdFromContext(ctx)
+	logger := svc.logger.With(log.UserId(userId), log.FileId(id), log.Context(ctx))
+
+	file, err := svc.fileRepo.GetById(ctx, id)
+	if err != nil {
+		logger.Error("unable to get file to edit", log.Error(err))
+		return err
+	}
+
+	if file.UserId != userId {
+		logger.Warn("user attempting to edit file they do not own")
+		return files.ErrNotUsersFile
+	}
+
+	file.Name = newFile.Name
+	file.Slug = newFile.Slug
+
+	err = svc.fileRepo.Update(ctx, file)
+	if err != nil {
+		msg := "failed to update file"
+		logger.Error(msg, log.Error(err))
+		return fmt.Errorf(msg+": %w", err)
+	}
+
+	logger.Info("file updated")
+	return nil
 }
 
 // GetById implements files.Service.
 func (svc *FileSvc) GetById(ctx context.Context, id string) (*files.File, error) {
-	return svc.repo.GetById(ctx, id)
+	return svc.fileRepo.GetById(ctx, id)
 }
 
 // GetByUserId implements files.Service.
 func (svc *FileSvc) GetByUserId(ctx context.Context, userId string) (*[]files.File, error) {
-	return svc.repo.GetByUserId(ctx, userId)
+	return svc.fileRepo.GetByUserId(ctx, userId)
 }
 
 func (svc *FileSvc) GetS3LinkFromSlug(ctx context.Context, slug string) (string, error) {

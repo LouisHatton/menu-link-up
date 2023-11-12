@@ -5,11 +5,17 @@ export type ApiError = {
 	message: string;
 };
 
-function handleNetworkError(r: Response): ApiError {
+async function handleNetworkError(r: Response): Promise<ApiError> {
 	console.log(r);
+	let json = await r.json();
+	let message = 'unable to parse error';
+	if ('status' in json) {
+		message = json.status;
+	}
+
 	return {
 		status: r.status,
-		message: 'unable to parse error'
+		message
 	};
 }
 
@@ -28,7 +34,7 @@ class NetworkService {
 		});
 
 		if (!response.ok) {
-			throw handleNetworkError(response);
+			throw await handleNetworkError(response);
 		}
 
 		let json: unknown;
@@ -50,7 +56,7 @@ class NetworkService {
 	}
 
 	async delete<T>(route: string) {
-		return this.fetch(route, 'DELETE');
+		return this.fetch(route, 'DELETE') as T;
 	}
 }
 

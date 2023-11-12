@@ -1,7 +1,6 @@
 package files
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -26,10 +25,6 @@ type NewFile struct {
 	Slug string `json:"slug"`
 }
 
-func Empty() File {
-	return File{}
-}
-
-func (f File) GetUrl() string {
-	return fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", f.S3Bucket, f.S3Region, f.S3Key)
+type FileUpload struct {
+	Url string `json:"url"`
 }

@@ -9,5 +9,10 @@ func AddUserIdToContext(ctx context.Context, userId string) context.Context {
 }
 
 func GetUserIdFromContext(ctx context.Context) string {
-	return ctx.Value(userIdContextKey).(string)
+	id := ctx.Value(userIdContextKey)
+	if id == nil {
+		panic("user id is not in context")
+	}
+
+	return id.(string)
 }

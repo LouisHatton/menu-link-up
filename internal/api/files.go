@@ -3,34 +3,32 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/LouisHatton/menu-link-up/internal/api/responses"
 	"github.com/LouisHatton/menu-link-up/internal/api/routes"
 	internalContext "github.com/LouisHatton/menu-link-up/internal/context"
 	"github.com/LouisHatton/menu-link-up/internal/files"
+	"github.com/LouisHatton/menu-link-up/internal/log"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
-	"github.com/google/uuid"
-	"go.uber.org/zap"
 )
 
 func (api *API) GetFile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userId := internalContext.GetUserIdFromContext(ctx)
-	logger := api.l.With(zap.String("userId", userId))
+	logger := api.l.With(log.String("userId", userId))
 
 	id, err := getFileIdFromUrl(r)
 	if err != nil {
-		logger.Error("unable to get file id from url", zap.Error(err))
+		logger.Error("unable to get file id from url", log.Error(err))
 		render.Render(w, r, responses.NotFoundResponse("file"))
 		return
 	}
-	logger = logger.With(zap.String("fileId", id))
+	logger = logger.With(log.String("fileId", id))
 
-	file, err := api.fileStore.GetById(ctx, id)
+	file, err := api.fileSvc.GetById(ctx, id)
 	if err != nil {
-		logger.Error("error getting document", zap.Error(err))
+		logger.Error("error getting file by id", log.Error(err))
 		render.Render(w, r, responses.NotFoundResponse("file"))
 		return
 	}
@@ -41,46 +39,33 @@ func (api *API) GetFile(w http.ResponseWriter, r *http.Request) {
 func (api *API) CreateFile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userId := internalContext.GetUserIdFromContext(ctx)
-	logger := api.l.With(zap.String("userId", userId))
+	logger := api.l.With(log.String("userId", userId))
 
 	data := files.NewFile{}
 	if err := render.Decode(r, &data); err != nil {
-		logger.Error("error parsing provided file data", zap.Error(err))
+		logger.Error("error parsing provided file data", log.Error(err))
 		render.Render(w, r, responses.ErrInvalidRequest(err))
 		return
 	}
 
-	id := uuid.New().String()
-	logger = logger.With(zap.String("fileId", id))
-	newFile := files.File{
-		ID:        id,
-		Slug:      data.Slug,
-		Name:      data.Name,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-		UserId:    userId,
-	}
-
-	if err := api.fileStore.Create(ctx, &newFile); err != nil {
-		logger.Error("failed to store new file", zap.Error(err))
+	newFile, err := api.fileSvc.Create(ctx, userId, data)
+	if err != nil {
+		logger.Error("attempting to create file", log.Error(err))
 		render.Render(w, r, responses.ErrInternalServerError())
 		return
 	}
 
-	logger.Info("new file created")
 	render.JSON(w, r, &newFile)
 }
 
 func (api *API) ListFiles(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userId := internalContext.GetUserIdFromContext(ctx)
-	logger := api.l.With(zap.String("userId", userId))
+	logger := api.l.With(log.String("userId", userId))
 
-	logger.Debug("getting files")
-
-	docs, err := api.fileStore.GetByUserId(ctx, userId)
+	docs, err := api.fileSvc.GetByUserId(ctx, userId)
 	if err != nil {
-		logger.Error("failed to fetch files", zap.Error(err))
+		logger.Error("failed to fetch files", log.Error(err))
 		render.Render(w, r, responses.ErrInternalServerError())
 		return
 	}
@@ -91,79 +76,64 @@ func (api *API) ListFiles(w http.ResponseWriter, r *http.Request) {
 func (api *API) EditFile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userId := internalContext.GetUserIdFromContext(ctx)
-
-	logger := api.l.With(zap.String("userId", userId))
+	logger := api.l.With(log.String("userId", userId))
 
 	newFile := files.NewFile{}
 	if err := render.Decode(r, &newFile); err != nil {
-		logger.Error("error parsing provided file data", zap.Error(err))
+		logger.Error("error parsing provided file data", log.Error(err))
 		render.Render(w, r, responses.ErrInvalidRequest(err))
 		return
 	}
 
 	id, err := getFileIdFromUrl(r)
 	if err != nil {
-		logger.Error("unable to get file id from url", zap.Error(err))
+		logger.Error("unable to get file id from url", log.Error(err))
 		render.Render(w, r, responses.NotFoundResponse("file"))
 		return
 	}
-	logger = logger.With(zap.String("fileId", id))
+	logger = logger.With(log.String("fileId", id))
 
-	file, err := api.fileStore.GetById(ctx, id)
-	if err != nil {
-		logger.Error("error getting document", zap.Error(err))
-		render.Render(w, r, responses.NotFoundResponse("file"))
-		return
-	}
-
-	file.Name = newFile.Name
-	file.Slug = newFile.Slug
-
-	if err := api.fileStore.Update(ctx, file); err != nil {
-		logger.Error("failed to store file", zap.Error(err))
+	err = api.fileSvc.Edit(ctx, id, newFile)
+	msg := "attempting to edit file"
+	switch err {
+	case nil:
+	case files.ErrNotUsersFile:
+		logger.Warn(msg, log.Error(err))
+		render.Render(w, r, responses.ErrForbidden())
+	default:
+		logger.Error(msg, log.Error(err))
 		render.Render(w, r, responses.ErrInternalServerError())
-		return
 	}
 
-	logger.Info("file updated")
-	render.JSON(w, r, file)
+	render.Status(r, http.StatusOK)
 }
 
 func (api *API) DeleteFile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userId := internalContext.GetUserIdFromContext(ctx)
-	logger := api.l.With(zap.String("userId", userId))
+	logger := api.l.With(log.String("userId", userId))
 
 	id, err := getFileIdFromUrl(r)
 	if err != nil {
-		logger.Error("unable to get file id from url", zap.Error(err))
+		logger.Error("unable to get file id from url", log.Error(err))
 		render.Render(w, r, responses.NotFoundResponse("file"))
 		return
 	}
-	logger = logger.With(zap.String("fileId", id))
+	logger = logger.With(log.String("fileId", id))
 
-	file, err := api.fileStore.GetById(ctx, id)
-	if err != nil {
-		logger.Error("error getting document", zap.Error(err))
-		render.Render(w, r, responses.NotFoundResponse("file"))
-		return
-	}
-
-	if file.UserId != userId {
-		logger.Warn("attempting to delete file user does not own")
+	err = api.fileSvc.Delete(ctx, id)
+	msg := "attempting to delete file"
+	switch err {
+	case nil:
+	case files.ErrNotUsersFile:
+		logger.Warn(msg, log.Error(err))
 		render.Render(w, r, responses.ErrForbidden())
-		return
-	}
-
-	err = api.fileStore.DeleteById(ctx, file.ID)
-	if err != nil {
-		logger.Error("error deleting file", zap.Error(err))
+	default:
+		logger.Error(msg, log.Error(err))
 		render.Render(w, r, responses.ErrInternalServerError())
-		return
 	}
 
-	logger.Info("file deleted")
-	render.Status(r, 200)
+	render.Status(r, http.StatusOK)
 }
 
 func getFileIdFromUrl(r *http.Request) (string, error) {
