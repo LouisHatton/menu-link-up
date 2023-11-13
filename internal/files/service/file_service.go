@@ -42,7 +42,7 @@ func (svc *FileSvc) Create(ctx context.Context, userId string, newFile files.New
 		return nil, fmt.Errorf(msg+": %w", err)
 	}
 
-	url, err := svc.objStoreSvc.PresignedPut(ctx, location, 15*time.Minute)
+	url, err := svc.objStoreSvc.PresignedPut(ctx, location, newFile.FileSize, 15*time.Minute)
 	if err != nil {
 		msg := "attempting to create put url"
 		logger.Error(msg, log.Error(err))
@@ -57,6 +57,7 @@ func (svc *FileSvc) Create(ctx context.Context, userId string, newFile files.New
 		Slug:      newFile.Slug,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
+		FileSize:  newFile.FileSize,
 		S3Region:  location.Region,
 		S3Bucket:  location.Bucket,
 		S3Key:     location.Key,

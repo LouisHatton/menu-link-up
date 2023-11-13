@@ -14,6 +14,7 @@ export type File = {
 export type NewFile = {
 	name: string;
 	slug: string;
+	fileSize: number;
 };
 
 export type FileUpload = {
@@ -29,12 +30,13 @@ export class FileService {
 		return NetworkService.post('/api/v1/files', newFile);
 	}
 
-	uploadFile(url: string, file: BodyInit): Promise<Response> {
+	uploadFile(url: string, file: BodyInit, size: number): Promise<Response> {
 		return fetch(url, {
 			method: 'PUT',
 			body: file,
 			headers: {
-				'content-type': 'application/pdf'
+				'content-type': 'application/pdf',
+				'content-length': size.toString()
 			}
 		});
 	}

@@ -108,7 +108,7 @@ func (svc *S3Service) PresignedGet(ctx context.Context, location objectstore.Fil
 }
 
 // PresignedPut implements objectstore.Service.
-func (svc *S3Service) PresignedPut(ctx context.Context, location objectstore.FileLocation, expires time.Duration) (string, error) {
+func (svc *S3Service) PresignedPut(ctx context.Context, location objectstore.FileLocation, fileSize int, expires time.Duration) (string, error) {
 	userId := internal_context.GetUserIdFromContext(ctx)
 	err := svc.parseFileLocation(&location)
 	if err != nil {
@@ -121,6 +121,7 @@ func (svc *S3Service) PresignedPut(ctx context.Context, location objectstore.Fil
 	})
 
 	req.HTTPRequest.Header.Set("Content-Type", "application/pdf")
+	req.HTTPRequest.Header.Set("Content-Length", fmt.Sprint(fileSize))
 	str, err := req.Presign(expires)
 	if err != nil {
 		return "", fmt.Errorf("attempting to pre-sign put object request: %w", err)
@@ -159,6 +160,7 @@ func (svc *S3Service) DeleteFile(ctx context.Context, location objectstore.FileL
 		return err
 	}
 
+	logger.Info("deleted object")
 	return nil
 }
 

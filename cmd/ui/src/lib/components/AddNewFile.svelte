@@ -10,10 +10,11 @@
 	import Alert from './Alert.svelte';
 
 	export let large = false;
+	export let disabled = false;
 
 	const dispatch = createEventDispatcher();
 	let openModal = false;
-	let disabled = true;
+	let uploadDisabled = true;
 	let loading = false;
 	let checkingUrl = false;
 	let urlIsAvailable = true;
@@ -31,12 +32,13 @@
 	}
 
 	$: if (slug != '' && filename != '' && uploadedFiles?.length && urlIsAvailable) {
-		disabled = false;
+		uploadDisabled = false;
 	} else {
-		disabled = true;
+		uploadDisabled = true;
 	}
 
 	function handleModalClick() {
+		if (disabled) return;
 		openModal = true;
 	}
 
@@ -45,7 +47,8 @@
 		apiError = undefined;
 		let newFile: NewFile = {
 			name: filename,
-			slug
+			slug,
+			fileSize: uploadedFiles[0].size
 		};
 
 		if (uploadedFiles == undefined || uploadedFiles?.length < 1) {
@@ -59,13 +62,13 @@
 
 		try {
 			let url = await FileService.createFile(newFile);
-			try {
-				await FileService.uploadFile(url.url, uploadedFiles[0]);
+			let resp = await FileService.uploadFile(url.url, uploadedFiles[0], uploadedFiles[0].size);
+			if (resp.ok) {
 				dispatch('create');
-			} catch {
+			} else {
 				apiError = {
-					status: 500,
-					message: 'Unable to upload file - please contact support'
+					status: resp.status,
+					message: 'Unable to upload file. If issue persists, please contact support.'
 				};
 			}
 		} catch (err: unknown) {
@@ -76,14 +79,14 @@
 	}
 </script>
 
-{#if large}
+{#if large && !disabled}
 	<button
 		on:click={handleModalClick}
 		class="w-full py-28 border-2 border-dashed border-gray-400 rounded-md hover:bg-gray-100"
 		>Click here to add your first Menu!
 	</button>
 {:else}
-	<Button on:click={handleModalClick}>Add New</Button>
+	<Button {disabled} on:click={handleModalClick}>Add New</Button>
 {/if}
 <Modal title="Add New" bind:open={openModal} class="lg:w-[80%]">
 	<p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
@@ -117,6 +120,8 @@
 		<p class="text-red-600">Error: {apiError.message} ({apiError.status})</p>
 	{/if}
 	<svelte:fragment slot="footer">
-		<LoadingButton {loading} on:click={createNewFile} {disabled}>Upload</LoadingButton>
+		<LoadingButton {loading} on:click={createNewFile} disabled={uploadDisabled}
+			>Upload</LoadingButton
+		>
 	</svelte:fragment>
 </Modal>

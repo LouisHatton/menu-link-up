@@ -20,7 +20,7 @@ func New(db *sql.DB) *FileRepo {
 	}
 }
 
-var selectAll string = "SELECT `id`, `user_id`, `name`, `updated_at`, `created_at`, `slug`, `s3_region`, `s3_bucket`, `s3_key` FROM `files` "
+var selectAll string = "SELECT `id`, `user_id`, `name`, `updated_at`, `created_at`, `slug`, `file_size`, `s3_region`, `s3_bucket`, `s3_key` FROM `files` "
 
 func selectAllScan(rows *sql.Rows) (files.File, error) {
 	var file files.File
@@ -31,6 +31,7 @@ func selectAllScan(rows *sql.Rows) (files.File, error) {
 		&file.UpdatedAt,
 		&file.CreatedAt,
 		&file.Slug,
+		&file.FileSize,
 		&file.S3Region,
 		&file.S3Bucket,
 		&file.S3Key,
@@ -155,7 +156,7 @@ func (r *FileRepo) GetByUserId(ctx context.Context, userId string) (*[]files.Fil
 
 // Update implements files.Repository.
 func (r *FileRepo) Create(ctx context.Context, file *files.File) error {
-	query := "INSERT INTO `files` (`id`, `user_id`, `name`, `updated_at`, `created_at`, `slug`, `s3_region`, `s3_bucket`, `s3_key`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	query := "INSERT INTO `files` (`id`, `user_id`, `name`, `updated_at`, `created_at`, `slug`, `file_size`, `s3_region`, `s3_bucket`, `s3_key`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 	_, err := r.db.ExecContext(ctx, query,
 		file.ID,
@@ -164,6 +165,7 @@ func (r *FileRepo) Create(ctx context.Context, file *files.File) error {
 		file.UpdatedAt,
 		file.CreatedAt,
 		file.Slug,
+		file.FileSize,
 		file.S3Region,
 		file.S3Bucket,
 		file.S3Key,
@@ -177,7 +179,7 @@ func (r *FileRepo) Create(ctx context.Context, file *files.File) error {
 
 // Update implements files.Repository.
 func (r *FileRepo) Update(ctx context.Context, file *files.File) error {
-	query := "UPDATE `files` SET `user_id` = ?, `name` = ?, `updated_at` = ?, `created_at` = ?, `slug` = ?, `s3_region` = ?, `s3_bucket` = ?, `s3_key` = ? WHERE `id` = ?"
+	query := "UPDATE `files` SET `user_id` = ?, `name` = ?, `updated_at` = ?, `created_at` = ?, `slug` = ?, `file_size` = ?, `s3_region` = ?, `s3_bucket` = ?, `s3_key` = ? WHERE `id` = ?"
 
 	_, err := r.db.ExecContext(ctx, query,
 		file.UserId,
@@ -185,6 +187,7 @@ func (r *FileRepo) Update(ctx context.Context, file *files.File) error {
 		file.UpdatedAt,
 		file.CreatedAt,
 		file.Slug,
+		file.FileSize,
 		file.S3Region,
 		file.S3Bucket,
 		file.S3Key,

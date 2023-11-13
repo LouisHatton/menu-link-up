@@ -70,10 +70,10 @@
 						{/each}
 					</TableBody>
 				</Table>
-				<div class="mt-4">
-					<AddNewFile large={files.length < 1} on:create={getProjects} />
-				</div>
 				<!-- <pre>{JSON.stringify(files, undefined, 2)}</pre> -->
+				<div class="mt-4">
+					<AddNewFile large={files.length < 1} on:create={getProjects} disabled={loading} />
+				</div>
 			</PageLoader>
 		</Card>
 	</div>
