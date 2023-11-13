@@ -7,9 +7,10 @@ export type ApiError = {
 
 async function handleNetworkError(r: Response): Promise<ApiError> {
 	console.log(r);
-	let json = await r.json();
-	let message = 'unable to parse error';
-	if ('status' in json) {
+
+	let json = await r.json().catch(() => {});
+	let message = 'Unexpected error occurred';
+	if (json != undefined && 'status' in json) {
 		message = json.status;
 	}
 

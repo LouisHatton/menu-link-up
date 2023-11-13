@@ -111,7 +111,7 @@ func (api *API) EditFile(w http.ResponseWriter, r *http.Request) {
 func (api *API) DeleteFile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userId := internalContext.GetUserIdFromContext(ctx)
-	logger := api.l.With(log.String("userId", userId))
+	logger := api.l.With(log.UserId(userId), log.Context(ctx))
 
 	id, err := getFileIdFromUrl(r)
 	if err != nil {
@@ -134,6 +134,30 @@ func (api *API) DeleteFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.Status(r, http.StatusOK)
+}
+
+func (api *API) GetObjectStoreLinkForFile(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := api.l.With(log.Context(ctx))
+	id, err := getFileIdFromUrl(r)
+	if err != nil {
+		logger.Error("unable to get file id from url", log.Error(err))
+		render.Render(w, r, responses.NotFoundResponse("file"))
+		return
+	}
+
+	link, err := api.fileSvc.GetLinkFromSlug(ctx, id)
+	switch err {
+	case nil:
+	case files.ErrFileNotFound:
+		render.Render(w, r, responses.NotFoundResponse("file"))
+		return
+	default:
+		logger.Error("attempting to get link from slug", log.Error(err))
+		render.Render(w, r, responses.ErrInternalServerError())
+	}
+
+	render.JSON(w, r, link)
 }
 
 func getFileIdFromUrl(r *http.Request) (string, error) {

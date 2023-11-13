@@ -6,4 +6,5 @@ const (
 	FilesPathPrefix = "/files"
 	CreateFilesPath = FilesPathPrefix
 	FileIdPath      = FilesPathPrefix + FileUrlParam
+	FileIdLinkPath  = FileIdPath + "/link"
 )

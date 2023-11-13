@@ -56,8 +56,7 @@
 									><a
 										class="text-blue-600 hover:underline"
 										target="_blank"
-										href={'https://menulinkup.com/' + file.slug}
-										>https://menulinkup.com/{file.slug}</a
+										href={location.origin + '/f/' + file.slug}>{location.origin}/f/{file.slug}</a
 									></TableBodyCell
 								>
 								<TableBodyCell><CheckMark class="fill-current text-green-500 w-7" /></TableBodyCell>

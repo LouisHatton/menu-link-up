@@ -52,14 +52,17 @@ func (api API) Register(r chi.Router) error {
 
 	r.Route("/v1", func(r chi.Router) {
 
-		r.Use(api.authMiddleware.Middleware)
+		r.Route("/", func(r chi.Router) {
+			r.Use(api.authMiddleware.Middleware)
 
-		r.Get(routes.FileIdPath, api.GetFile)
-		r.Post(routes.FileIdPath, api.EditFile)
-		r.Delete(routes.FileIdPath, api.DeleteFile)
-		r.Get(routes.CreateFilesPath, api.ListFiles)
-		r.Post(routes.CreateFilesPath, api.CreateFile)
+			r.Get(routes.FileIdPath, api.GetFile)
+			r.Post(routes.FileIdPath, api.EditFile)
+			r.Delete(routes.FileIdPath, api.DeleteFile)
+			r.Get(routes.CreateFilesPath, api.ListFiles)
+			r.Post(routes.CreateFilesPath, api.CreateFile)
+		})
 
+		r.Get(routes.FileIdLinkPath, api.GetObjectStoreLinkForFile)
 	})
 
 	return nil

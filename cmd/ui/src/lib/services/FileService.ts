@@ -43,6 +43,10 @@ export class FileService {
 		return NetworkService.delete(`/api/v1/files/${fileId}`);
 	}
 
+	getFileLink(fileId: string): Promise<string> {
+		return NetworkService.get(`/api/v1/files/${fileId}/link`);
+	}
+
 	checkFileSlug(newFile: NewFile): Promise<boolean> {
 		return NetworkService.post('/api/v1/files/check', newFile);
 	}

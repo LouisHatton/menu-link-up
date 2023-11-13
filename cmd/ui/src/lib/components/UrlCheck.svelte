@@ -10,7 +10,7 @@
 
 <div
 	class={classnames(
-		'flex flex-row gap-x-2 text-sm',
+		'flex flex-row gap-x-2',
 		loading ? 'text-gray-500' : available ? 'text-green-500' : 'text-red-500'
 	)}
 >

@@ -5,52 +5,73 @@
 	import { sanitiseSlug } from '$lib/util';
 	import { Button, Fileupload, Input, Modal, Select } from 'flowbite-svelte';
 	import { createEventDispatcher } from 'svelte';
+	import LoadingButton from './LoadingButton.svelte';
+	import UrlCheck from './UrlCheck.svelte';
+	import Alert from './Alert.svelte';
 
 	export let large = false;
 
 	const dispatch = createEventDispatcher();
 	let openModal = false;
+	let disabled = true;
+	let loading = false;
+	let checkingUrl = false;
+	let urlIsAvailable = true;
 
 	let slug = '';
 	let filename = '';
 	let slugChanged = false;
-
 	let uploadedFiles: FileList;
 
-	let fileuploadprops = {
-		id: 'menu'
-	};
+	let apiError: ApiError | undefined;
 
 	$: slug = sanitiseSlug(slug);
 	$: if (!slugChanged) {
 		slug = sanitiseSlug(filename);
 	}
-	// $: checkSlug(slug);
+
+	$: if (slug != '' && filename != '' && uploadedFiles?.length && urlIsAvailable) {
+		disabled = false;
+	} else {
+		disabled = true;
+	}
 
 	function handleModalClick() {
 		openModal = true;
 	}
 
 	async function createNewFile() {
+		loading = true;
+		apiError = undefined;
 		let newFile: NewFile = {
 			name: filename,
 			slug
 		};
 
-		if (uploadedFiles.length < 1) {
-			alert('no file selected');
+		if (uploadedFiles == undefined || uploadedFiles?.length < 1) {
+			apiError = {
+				status: 400,
+				message: 'No file has been selected'
+			};
+			loading = false;
+			return;
 		}
 
 		try {
 			let url = await FileService.createFile(newFile);
-			if (url.url == '') {
-				alert('no url returned');
-			} else {
+			try {
 				await FileService.uploadFile(url.url, uploadedFiles[0]);
 				dispatch('create');
+			} catch {
+				apiError = {
+					status: 500,
+					message: 'Unable to upload file - please contact support'
+				};
 			}
 		} catch (err: unknown) {
-			alert((err as ApiError).message);
+			apiError = err as ApiError;
+		} finally {
+			loading = false;
 		}
 	}
 </script>
@@ -66,7 +87,7 @@
 {/if}
 <Modal title="Add New" bind:open={openModal} class="lg:w-[80%]">
 	<p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-		To add a new file, give a unique filename and upload your pdf.
+		Enter a name and a unique URL for your pdf to be hosted from
 	</p>
 	<p>
 		Name:
@@ -82,14 +103,20 @@
 		/>
 	</p>
 	<p>
-		Upload file
-		<Fileupload {...fileuploadprops} accept="application/pdf" bind:files={uploadedFiles} />
+		Upload file <span class="text-sm">(PDF only)</span>
+		<Fileupload accept="application/pdf" bind:files={uploadedFiles} />
 	</p>
-	<p class="text-base text-black dark:text-gray-400">
-		The file will be uploaded to: <br />
-		<span class="break-before-avoid text-blue-600">https://menulinkup.com/{slug}</span>
-	</p>
+	<UrlCheck available={urlIsAvailable} loading={checkingUrl} />
+	{#if !checkingUrl && urlIsAvailable}
+		<p class="text-base text-black dark:text-gray-400">
+			The file will be uploaded to: <br />
+			<span class="break-before-avoid text-blue-600">https://menulinkup.com/f/{slug}</span>
+		</p>
+	{/if}
+	{#if apiError}
+		<p class="text-red-600">Error: {apiError.message} ({apiError.status})</p>
+	{/if}
 	<svelte:fragment slot="footer">
-		<Button on:click={createNewFile}>Upload</Button>
+		<LoadingButton {loading} on:click={createNewFile} {disabled}>Upload</LoadingButton>
 	</svelte:fragment>
 </Modal>

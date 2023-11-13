@@ -42,6 +42,13 @@ func (svc *FileSvc) Create(ctx context.Context, userId string, newFile files.New
 		return nil, fmt.Errorf(msg+": %w", err)
 	}
 
+	url, err := svc.objStoreSvc.PresignedPut(ctx, location, 15*time.Minute)
+	if err != nil {
+		msg := "attempting to create put url"
+		logger.Error(msg, log.Error(err))
+		return nil, fmt.Errorf(msg+": %w", err)
+	}
+
 	id := uuid.NewString()
 	file := files.File{
 		ID:        id,
@@ -62,13 +69,6 @@ func (svc *FileSvc) Create(ctx context.Context, userId string, newFile files.New
 		return nil, fmt.Errorf(msg+": %w", err)
 	}
 	logger.Info("new file created", log.FileId(id))
-
-	url, err := svc.objStoreSvc.PresignedPut(ctx, location, 15*time.Minute)
-	if err != nil {
-		msg := "attempting to create put url"
-		logger.Warn(msg, log.Error(err))
-		return &files.FileUpload{}, nil
-	}
 
 	return &files.FileUpload{
 		Url: url,
@@ -151,8 +151,33 @@ func (svc *FileSvc) GetByUserId(ctx context.Context, userId string) (*[]files.Fi
 	return svc.fileRepo.GetByUserId(ctx, userId)
 }
 
-func (svc *FileSvc) GetS3LinkFromSlug(ctx context.Context, slug string) (string, error) {
-	panic("unimplemented")
+func (svc *FileSvc) GetLinkFromSlug(ctx context.Context, slug string) (string, error) {
+	logger := svc.logger.With(log.Context(ctx))
+	msg := "attempting to generate presigned get url for file"
+
+	file, err := svc.fileRepo.GetBySlug(ctx, slug)
+	if err != nil {
+		logger.Warn(msg, log.Error(err))
+		return "", err
+	}
+
+	logger = logger.With(log.FileId(file.ID))
+
+	url, err := svc.objStoreSvc.PresignedGet(
+		ctx,
+		objectstore.FileLocation{
+			Region: file.S3Region,
+			Bucket: file.S3Bucket,
+			Key:    file.S3Key,
+		},
+		time.Minute*30,
+	)
+	if err != nil {
+		logger.Error(msg, log.Error(err))
+		return "", fmt.Errorf(msg+": %w", err)
+	}
+
+	return url, nil
 }
 
 var _ files.Service = &FileSvc{}

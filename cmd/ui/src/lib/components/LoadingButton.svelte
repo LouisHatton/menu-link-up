@@ -4,7 +4,7 @@
 
 	export let disabled = false;
 	export let loading = false;
-	export let color: ButtonColorType;
+	export let color: ButtonColorType = 'blue';
 </script>
 
 <Button disabled={disabled || loading} {color} on:click>

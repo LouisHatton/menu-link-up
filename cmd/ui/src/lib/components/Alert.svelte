@@ -1,8 +1,8 @@
-<script>
+<script lang="ts">
 	import { Alert } from 'flowbite-svelte';
 </script>
 
-<Alert color="red">
+<Alert color="red" {...$$props}>
 	<span slot="icon">
 		<svg
 			aria-hidden="true"
