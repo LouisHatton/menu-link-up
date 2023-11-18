@@ -6,19 +6,13 @@ import (
 
 type User struct {
 	ID               string `json:"id"`
-	DisplayName      string `json:"displayName"`
 	Email            string `json:"email"`
-	EmailVerified    bool   `json:"emailVerified"`
 	StripeCustomerId string `json:"stripeCustomerId"`
-	ProviderID       string `json:"providerId"`
 }
 
 func AuthUserRecordToUser(user *auth.UserRecord) User {
 	return User{
-		ID:            user.UID,
-		DisplayName:   user.DisplayName,
-		Email:         user.Email,
-		EmailVerified: user.EmailVerified,
-		ProviderID:    user.ProviderID,
+		ID:    user.UID,
+		Email: user.Email,
 	}
 }

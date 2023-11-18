@@ -4,11 +4,8 @@ import NetworkService from './NetworkService';
 
 export type DbUser = {
 	id: string;
-	displayName: string;
 	email: string;
-	emailVerified: boolean;
 	stripeCustomerId: string;
-	providerId: string;
 };
 
 class UserService {

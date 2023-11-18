@@ -8,17 +8,14 @@ import (
 	"github.com/LouisHatton/menu-link-up/internal/users"
 )
 
-var selectAll string = "SELECT `id`, `display_name`, `email`, `email_verified`, `stripe_customer_id`, `provider_id` FROM `users` "
+var selectAll string = "SELECT `id`, `email`, `stripe_customer_id` FROM `users` "
 
 func selectAllScan(rows *sql.Rows) (users.User, error) {
 	var user users.User
 	err := rows.Scan(
 		&user.ID,
-		&user.DisplayName,
 		&user.Email,
-		&user.EmailVerified,
 		&user.StripeCustomerId,
-		&user.ProviderID,
 	)
 	return user, err
 }
@@ -82,15 +79,12 @@ func (r *UserRepo) GetById(ctx context.Context, id string) (*users.User, error) 
 
 // Update implements users.Repository.
 func (r *UserRepo) Create(ctx context.Context, user *users.User) error {
-	query := "INSERT INTO `users` (`id`, `display_name`, `email`, `email_verified`, `stripe_customer_id`, `provider_id`) VALUES (?, ?, ?, ?, ?, ?)"
+	query := "INSERT INTO `users` (`id`, `email`, `stripe_customer_id`) VALUES (?, ?, ?)"
 
 	_, err := r.db.ExecContext(ctx, query,
 		user.ID,
-		user.DisplayName,
 		user.Email,
-		user.EmailVerified,
 		user.StripeCustomerId,
-		user.ProviderID,
 	)
 	if err != nil {
 		return fmt.Errorf("unable to insert user: %w", err)
@@ -101,14 +95,11 @@ func (r *UserRepo) Create(ctx context.Context, user *users.User) error {
 
 // Update implements users.Repository.
 func (r *UserRepo) Update(ctx context.Context, user *users.User) error {
-	query := "UPDATE `users` SET `display_name` = ?, `email` = ?, `email_verified` = ?, `stripe_customer_id` = ?, `provider_id` = ? WHERE `id` = ?"
+	query := "UPDATE `users` SET `email` = ?, `stripe_customer_id` = ?, WHERE `id` = ?"
 
 	_, err := r.db.ExecContext(ctx, query,
-		user.DisplayName,
 		user.Email,
-		user.EmailVerified,
 		user.StripeCustomerId,
-		user.ProviderID,
 		user.ID,
 	)
 	if err != nil {
