@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { navigating, page } from '$app/stores';
 	import AuthenticationService from '$lib/services/AuthenticationService';
 	import { authStore } from '$lib/stores/authStore';
 	import { darkMode } from '$lib/stores/darkMode';
@@ -10,7 +10,7 @@
 	import Navigating from './Navigating.svelte';
 	import LoadingScreen from '$lib/components/LoadingScreen.svelte';
 
-	let loggingIn = false;
+	let loggingIn = true;
 	$: $page.route && checkIfLoggedIn($authStore.initialised);
 	let loading = true;
 
@@ -21,12 +21,14 @@
 		try {
 			const isInAuthRoute = $page.route.id?.includes('(authentication)');
 			const token = await AuthenticationService.getToken();
-			globalThis.jwt = token;
+
+			globalThis.jwt = token; // Set console JWT for access in dev tools
+
 			if (!token && !isInAuthRoute) {
 				await goto('/login');
 			} else if (token && isInAuthRoute) {
-				localStorage.removeItem('loggingIn');
 				await goto('/');
+				localStorage.removeItem('loggingIn');
 			}
 		} finally {
 			loading = false;
@@ -37,9 +39,9 @@
 <main class={`${$darkMode ? 'dark' : ''}`}>
 	<Navigating />
 	<!-- <ToastHandler /> -->
-	{#if $authStore.isLoggedIn || ($page.route.id?.includes('(authentication)') && !loggingIn)}
+	{#if $authStore.isLoggedIn || ($page.route.id?.includes('(authentication)') && !loggingIn && !$navigating)}
 		<slot />
-	{:else if loading}
+	{:else if loading || $navigating}
 		<LoadingScreen />
 	{/if}
 </main>

@@ -5,11 +5,12 @@ import (
 )
 
 type User struct {
-	ID            string `json:"id"`
-	DisplayName   string `json:"displayName"`
-	Email         string `json:"email"`
-	EmailVerified bool   `json:"emailVerified"`
-	ProviderID    string `json:"providerId"`
+	ID               string `json:"id"`
+	DisplayName      string `json:"displayName"`
+	Email            string `json:"email"`
+	EmailVerified    bool   `json:"emailVerified"`
+	StripeCustomerId string `json:"stripeCustomerId"`
+	ProviderID       string `json:"providerId"`
 }
 
 func AuthUserRecordToUser(user *auth.UserRecord) User {

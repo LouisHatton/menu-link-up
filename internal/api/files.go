@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/LouisHatton/menu-link-up/internal/api/responses"
-	"github.com/LouisHatton/menu-link-up/internal/api/routes"
 	internalContext "github.com/LouisHatton/menu-link-up/internal/context"
 	"github.com/LouisHatton/menu-link-up/internal/files"
 	"github.com/LouisHatton/menu-link-up/internal/log"
@@ -51,7 +50,7 @@ func (api *API) CreateFile(w http.ResponseWriter, r *http.Request) {
 	newFile, err := api.fileSvc.Create(ctx, userId, data)
 	if err != nil {
 		logger.Error("attempting to create file", log.Error(err))
-		render.Render(w, r, responses.ErrInternalServerError())
+		render.Render(w, r, responses.ErrInternalServerError(err))
 		return
 	}
 
@@ -66,7 +65,7 @@ func (api *API) ListFiles(w http.ResponseWriter, r *http.Request) {
 	docs, err := api.fileSvc.GetByUserId(ctx, userId)
 	if err != nil {
 		logger.Error("failed to fetch files", log.Error(err))
-		render.Render(w, r, responses.ErrInternalServerError())
+		render.Render(w, r, responses.ErrInternalServerError(err))
 		return
 	}
 
@@ -102,7 +101,7 @@ func (api *API) EditFile(w http.ResponseWriter, r *http.Request) {
 		render.Render(w, r, responses.ErrForbidden())
 	default:
 		logger.Error(msg, log.Error(err))
-		render.Render(w, r, responses.ErrInternalServerError())
+		render.Render(w, r, responses.ErrInternalServerError(err))
 	}
 
 	render.Status(r, http.StatusOK)
@@ -130,7 +129,7 @@ func (api *API) DeleteFile(w http.ResponseWriter, r *http.Request) {
 		render.Render(w, r, responses.ErrForbidden())
 	default:
 		logger.Error(msg, log.Error(err))
-		render.Render(w, r, responses.ErrInternalServerError())
+		render.Render(w, r, responses.ErrInternalServerError(err))
 	}
 
 	render.Status(r, http.StatusOK)
@@ -154,14 +153,14 @@ func (api *API) GetObjectStoreLinkForFile(w http.ResponseWriter, r *http.Request
 		return
 	default:
 		logger.Error("attempting to get link from slug", log.Error(err))
-		render.Render(w, r, responses.ErrInternalServerError())
+		render.Render(w, r, responses.ErrInternalServerError(err))
 	}
 
 	render.JSON(w, r, link)
 }
 
 func getFileIdFromUrl(r *http.Request) (string, error) {
-	if id := chi.URLParam(r, routes.FileIdParam); id != "" {
+	if id := chi.URLParam(r, FileIdParam); id != "" {
 		return id, nil
 	} else {
 		return "", fmt.Errorf("url does not contain file id: url: %s", r.URL.String())

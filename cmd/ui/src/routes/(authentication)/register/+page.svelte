@@ -1,9 +1,10 @@
 <script lang="ts">
-	import Alert from '$lib/components/Alert.svelte';
+	import Alert from '$lib/components/ErrorAlert.svelte';
 	import AuthenticationService from '$lib/services/AuthenticationService';
 	import { validateEmail, validatePassword } from '$lib/util';
 	import { Button, Checkbox, Label, Input, Spinner } from 'flowbite-svelte';
 	import SignInWithGoogle from '../SignInWithGoogle.svelte';
+	import ErrorAlert from '$lib/components/ErrorAlert.svelte';
 
 	let email: string;
 	let password: string;
@@ -46,7 +47,7 @@
 		<form class="flex flex-col space-y-6" action="/">
 			<h3 class="text-xl font-medium text-gray-900 dark:text-white p-0">Register</h3>
 			{#if errorMessage != ''}
-				<Alert>{errorMessage}</Alert>
+				<ErrorAlert>{errorMessage}</ErrorAlert>
 			{/if}
 			<Label class="space-y-2">
 				<span>Your email</span>

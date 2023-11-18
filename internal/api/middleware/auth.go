@@ -41,8 +41,8 @@ func (m *Auth) Middleware(next http.Handler) http.Handler {
 			render.Render(w, r, responses.ErrUnauthorised())
 			return
 		}
-		userId := token.UID
 
+		userId := token.UID
 		ctx = internalContext.AddUserIdToContext(ctx, userId)
 
 		next.ServeHTTP(w, r.Clone(ctx))

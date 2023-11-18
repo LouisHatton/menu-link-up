@@ -2,11 +2,13 @@
 	import AddNewFile from '$lib/components/AddNewFile.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import DeleteFile from '$lib/components/DeleteFile.svelte';
+	import ErrorAlert from '$lib/components/ErrorAlert.svelte';
 	import PageLoader from '$lib/components/PageLoader.svelte';
 	import PageWrapper from '$lib/components/PageWrapper.svelte';
 	import CheckMark from '$lib/icons/CheckMark.svelte';
 	import type { File } from '$lib/services/FileService';
 	import FileService from '$lib/services/FileService';
+	import type { ApiError } from '$lib/services/NetworkService';
 	import { authStore } from '$lib/stores/authStore';
 	import {
 		Button,
@@ -19,13 +21,17 @@
 	} from 'flowbite-svelte';
 
 	let loading = false;
+	let filesError: ApiError | undefined = undefined;
 	let files: File[] = [];
 
 	$: getProjects();
 	async function getProjects() {
 		loading = true;
+		filesError = undefined;
 		try {
 			files = await FileService.listFiles();
+		} catch (err: unknown) {
+			filesError = err as ApiError;
 		} finally {
 			loading = false;
 		}
@@ -40,40 +46,45 @@
 				Your Menus: <span class="text-sm text-gray-500">(1/3)</span>
 			</h3>
 			<PageLoader {loading}>
-				<Table>
-					<TableHead>
-						<TableHeadCell>Name</TableHeadCell>
-						<TableHeadCell>Url</TableHeadCell>
-						<TableHeadCell>Status</TableHeadCell>
-						<TableHeadCell>Edit</TableHeadCell>
-						<TableHeadCell />
-					</TableHead>
-					<TableBody>
-						{#each files as file}
-							<TableBodyRow>
-								<TableBodyCell>{file.name}</TableBodyCell>
-								<TableBodyCell
-									><a
-										class="text-blue-600 hover:underline"
-										target="_blank"
-										href={location.origin + '/f/' + file.slug}>{location.origin}/f/{file.slug}</a
-									></TableBodyCell
-								>
-								<TableBodyCell><CheckMark class="fill-current text-green-500 w-7" /></TableBodyCell>
-								<TableBodyCell>
-									<div class="flex flex-row gap-x-4">
-										<Button>Edit</Button>
-										<DeleteFile {file} on:delete={getProjects} />
-									</div>
-								</TableBodyCell>
-							</TableBodyRow>
-						{/each}
-					</TableBody>
-				</Table>
-				<!-- <pre>{JSON.stringify(files, undefined, 2)}</pre> -->
-				<div class="mt-4">
-					<AddNewFile large={files.length < 1} on:create={getProjects} disabled={loading} />
-				</div>
+				{#if filesError}
+					<ErrorAlert title="Something went wrong fetching your files" err={filesError} />
+				{:else}
+					<Table>
+						<TableHead>
+							<TableHeadCell>Name</TableHeadCell>
+							<TableHeadCell>Url</TableHeadCell>
+							<TableHeadCell>Status</TableHeadCell>
+							<TableHeadCell>Edit</TableHeadCell>
+							<TableHeadCell />
+						</TableHead>
+						<TableBody>
+							{#each files as file}
+								<TableBodyRow>
+									<TableBodyCell>{file.name}</TableBodyCell>
+									<TableBodyCell
+										><a
+											class="text-blue-600 hover:underline"
+											target="_blank"
+											href={location.origin + '/f/' + file.slug}>{location.origin}/f/{file.slug}</a
+										></TableBodyCell
+									>
+									<TableBodyCell
+										><CheckMark class="fill-current text-green-500 w-7" /></TableBodyCell
+									>
+									<TableBodyCell>
+										<div class="flex flex-row gap-x-4">
+											<Button>Edit</Button>
+											<DeleteFile {file} on:delete={getProjects} />
+										</div>
+									</TableBodyCell>
+								</TableBodyRow>
+							{/each}
+						</TableBody>
+					</Table>
+					<div class="mt-4">
+						<AddNewFile large={files.length < 1} on:create={getProjects} disabled={loading} />
+					</div>
+				{/if}
 			</PageLoader>
 		</Card>
 	</div>

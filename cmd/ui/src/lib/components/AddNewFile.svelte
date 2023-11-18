@@ -7,7 +7,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import LoadingButton from './LoadingButton.svelte';
 	import UrlCheck from './UrlCheck.svelte';
-	import Alert from './Alert.svelte';
+	import Alert from './ErrorAlert.svelte';
 
 	export let large = false;
 	export let disabled = false;

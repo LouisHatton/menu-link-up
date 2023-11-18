@@ -37,6 +37,15 @@ func ErrInvalidRequest(err error) render.Renderer {
 	}
 }
 
+// Returns an Unauthroised response
+//
+// Should be used when the client is not a known user
+//
+//	ok := auth.VerifyToken(token)
+//	if !ok {
+//		render.Render(responses.ErrUnauthorised())
+//		return
+//	}
 func ErrUnauthorised() render.Renderer {
 	return &HttpResponse{
 		StatusCode: http.StatusUnauthorized,
@@ -44,6 +53,15 @@ func ErrUnauthorised() render.Renderer {
 	}
 }
 
+// Returns a Forbidden response
+//
+// Should be used when the client is a user but is not allowed to access the
+// resource they are requesting.
+//
+//	if user.ID != requestedID {
+//		render.Render(responses.ErrForbidden())
+//		return
+//	}
 func ErrForbidden() render.Renderer {
 	return &HttpResponse{
 		StatusCode: http.StatusForbidden,
@@ -51,10 +69,11 @@ func ErrForbidden() render.Renderer {
 	}
 }
 
-func ErrInternalServerError() render.Renderer {
+func ErrInternalServerError(err error) render.Renderer {
 	return &HttpResponse{
 		StatusCode: http.StatusInternalServerError,
 		StatusText: "Internal Server Error",
+		ErrorText:  err.Error(),
 	}
 }
 

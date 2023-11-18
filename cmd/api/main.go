@@ -13,6 +13,8 @@ import (
 	files_service "github.com/LouisHatton/menu-link-up/internal/files/service"
 	"github.com/LouisHatton/menu-link-up/internal/log"
 	s3_service "github.com/LouisHatton/menu-link-up/internal/objectstore/s3/service"
+	users_repository "github.com/LouisHatton/menu-link-up/internal/users/repository"
+	users_service "github.com/LouisHatton/menu-link-up/internal/users/service"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/caarlos0/env/v10"
@@ -81,10 +83,16 @@ func main() {
 		logger.Fatal("error initializing files service", log.Error(err))
 	}
 
+	// --- User SVC
+	userSvc, err := users_service.New(logger, authClient, users_repository.New(db))
+	if err != nil {
+		logger.Fatal("error initializing users service", log.Error(err))
+	}
+
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
-	api, err := api.New(logger, cfg.Environment.CurrentEnv, authMiddleware, fileSvc)
+	api, err := api.New(logger, cfg.Environment.CurrentEnv, authMiddleware, fileSvc, userSvc)
 	if err != nil {
 		logger.Fatal("error initializing api", log.Error(err))
 	}

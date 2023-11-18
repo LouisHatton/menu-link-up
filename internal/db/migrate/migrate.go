@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
     display_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
     email_verified BOOLEAN NOT NULL,
+    stripe_customer_id VARCHAR(255) NOT NULL,
     provider_id VARCHAR(255) NOT NULL,
     PRIMARY KEY (id)
 );`

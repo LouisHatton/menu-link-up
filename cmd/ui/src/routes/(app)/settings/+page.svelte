@@ -9,10 +9,12 @@
 	import LoadingButton from '$lib/components/LoadingButton.svelte';
 	import AuthenticationService from '$lib/services/AuthenticationService';
 	import Arrow from '$lib/icons/Arrow.svelte';
+	import type { ApiError } from '$lib/services/NetworkService';
 
 	let emailAddress = '';
 	let name = '';
 	let saving = false;
+	let deleting = false;
 	let loadingData = true;
 
 	$: $authStore.user ? updateVars($authStore.user) : (loadingData = true);
@@ -27,14 +29,30 @@
 		}
 	}
 
-	async function hanldeClick() {
+	async function handleClick() {
 		saving = true;
-		await UserService.updateUser(emailAddress, name);
+		await UserService.updateUserDisplayName(name);
 		saving = false;
 	}
 
 	async function handleResetPassword() {
 		console.log(await AuthenticationService.getToken());
+	}
+
+	async function handleDeleteAccount() {
+		deleting = true;
+		try {
+			await UserService.deleteUser();
+			await AuthenticationService.logOut();
+		} catch (err: unknown) {
+			alert(
+				`There was an issue, if this continues please contact support (${
+					(err as ApiError).message
+				} - ${(err as ApiError).status})`
+			);
+		} finally {
+			deleting = false;
+		}
 	}
 </script>
 
@@ -54,10 +72,10 @@
 				</div>
 				<div>
 					<Label class="mb-2">Email Address:</Label>
-					<Input disabled={loadingData} class="mb-4" bind:value={emailAddress} />
+					<Input disabled class="mb-4" bind:value={emailAddress} />
 				</div>
 				<div class="flex flex-row justify-between">
-					<LoadingButton color="blue" loading={saving} on:click={hanldeClick}>Save</LoadingButton>
+					<LoadingButton color="blue" loading={saving} on:click={handleClick}>Save</LoadingButton>
 					<Button color="light" on:click={handleResetPassword}>Change Password</Button>
 				</div>
 			</div>
@@ -65,7 +83,9 @@
 		<div>
 			<Card>
 				<h4 class="text-lg font-semibold mb-4">Danger Zone</h4>
-				<Button color="red">Delete Account</Button>
+				<LoadingButton color="red" on:click={handleDeleteAccount} loading={deleting}
+					>Delete Account</LoadingButton
+				>
 			</Card>
 		</div>
 	</div>

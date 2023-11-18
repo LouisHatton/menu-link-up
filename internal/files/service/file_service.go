@@ -112,6 +112,29 @@ func (svc *FileSvc) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
+func (svc *FileSvc) DeleteByUserId(ctx context.Context, userId string) error {
+	requestingUserId := internalContext.GetUserIdFromContext(ctx)
+	logger := svc.logger.With(log.UserId(requestingUserId), log.Context(ctx), log.RequestedId(userId))
+
+	files, err := svc.GetByUserId(ctx, userId)
+	if err != nil {
+		msg := "unable to get users files to delete"
+		logger.Error(msg, log.Error(err))
+		return fmt.Errorf(msg+": %w", err)
+	}
+
+	for _, file := range *files {
+		logger := logger.With(log.FileId(file.ID))
+
+		err := svc.Delete(ctx, file.ID)
+		if err != nil {
+			logger.Warn("unable to delete file, continuing to not block other deletes")
+		}
+	}
+
+	return nil
+}
+
 // Edit implements files.Service.
 func (svc *FileSvc) Edit(ctx context.Context, id string, newFile files.NewFile) error {
 	userId := internalContext.GetUserIdFromContext(ctx)
