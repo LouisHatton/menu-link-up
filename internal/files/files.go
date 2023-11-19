@@ -23,6 +23,7 @@ type File struct {
 
 type NewFile struct {
 	Name     string `json:"name"`
+	FileName string `json:"fileName"`
 	Slug     string `json:"slug"`
 	FileSize int    `json:"fileSize"`
 }

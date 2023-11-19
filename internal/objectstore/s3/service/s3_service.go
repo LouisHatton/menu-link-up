@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	internal_context "github.com/LouisHatton/menu-link-up/internal/context"
@@ -35,7 +36,7 @@ func New(logger *log.Logger, s *session.Session, defaultBucket string) (*S3Servi
 }
 
 // GenerateFileLocation implements objectstore.Service.
-func (svc *S3Service) GenerateFileLocation(ctx context.Context) (objectstore.FileLocation, error) {
+func (svc *S3Service) GenerateFileLocation(ctx context.Context, prefix string, suffix *string) (objectstore.FileLocation, error) {
 	var location objectstore.FileLocation
 	var key string
 	var err error
@@ -45,7 +46,13 @@ func (svc *S3Service) GenerateFileLocation(ctx context.Context) (objectstore.Fil
 	keyFound := false
 	for !keyFound && attempts < 3 {
 		attempts++
-		key = uuid.NewString() + ".pdf"
+		key = prefix + "/" + uuid.NewString()
+		if suffix != nil {
+			key += "/" + *suffix
+		}
+		if len(strings.Split(key, ".pdf")) == 1 {
+			key += ".pdf"
+		}
 		exists, err = svc.keyExists(svc.defaultBucket, key)
 		if err != nil {
 			msg := "attempting to check if key exists"

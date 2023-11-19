@@ -8,7 +8,7 @@ import (
 )
 
 type Service interface {
-	GenerateFileLocation(ctx context.Context) (FileLocation, error)
+	GenerateFileLocation(ctx context.Context, prefix string, suffix *string) (FileLocation, error)
 	PresignedPut(ctx context.Context, location FileLocation, fileSize int, expires time.Duration) (string, error)
 	PresignedGet(ctx context.Context, location FileLocation, expires time.Duration) (string, error)
 	DeleteFile(ctx context.Context, location FileLocation) error

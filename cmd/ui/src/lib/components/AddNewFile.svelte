@@ -59,13 +59,14 @@
 
 		let newFile: NewFile = {
 			name: filename,
+			fileName: uploadedFile.name,
 			slug,
-			fileSize: uploadedFiles[0].size
+			fileSize: uploadedFile.size
 		};
 
 		try {
 			let url = await FileService.createFile(newFile);
-			let resp = await FileService.uploadFile(url.url, uploadedFile, uploadedFile.size);
+			let resp = await FileService.uploadFile(url.url, uploadedFile, newFile.fileSize);
 			if (resp.ok) {
 				dispatch('create');
 			} else {

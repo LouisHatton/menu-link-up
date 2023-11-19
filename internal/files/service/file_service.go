@@ -40,7 +40,7 @@ func (svc *FileSvc) Create(ctx context.Context, userId string, newFile files.New
 		return nil, files.ErrSlugAlreadyInUse
 	}
 
-	location, err := svc.objStoreSvc.GenerateFileLocation(ctx)
+	location, err := svc.objStoreSvc.GenerateFileLocation(ctx, "u/"+userId, &newFile.FileName)
 	if err != nil {
 		msg := "attempting to generate objectstore location"
 		logger.Error(msg, log.Error(err))

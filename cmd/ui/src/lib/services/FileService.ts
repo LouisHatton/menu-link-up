@@ -13,6 +13,7 @@ export type File = {
 
 export type NewFile = {
 	name: string;
+	fileName: string;
 	slug: string;
 	fileSize: number;
 };
