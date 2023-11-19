@@ -65,6 +65,8 @@ func (api API) Register(r chi.Router) error {
 			r.Get(FilesPath, api.ListFiles)
 			r.Post(FilesPath, api.CreateFile)
 
+			r.Post(CheckFilePath, api.CheckFile)
+
 			// Users
 			r.Get(UserIdPath, api.GetUser)
 			r.Delete(UserIdPath, api.DeleteUser)

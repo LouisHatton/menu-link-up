@@ -26,6 +26,7 @@
 
 	let apiError: ApiError | undefined;
 
+	$: uploadedFile = uploadedFiles?.length > 0 ? uploadedFiles[0] : undefined;
 	$: slug = sanitiseSlug(slug);
 	$: if (!slugChanged) {
 		slug = sanitiseSlug(filename);
@@ -45,13 +46,8 @@
 	async function createNewFile() {
 		loading = true;
 		apiError = undefined;
-		let newFile: NewFile = {
-			name: filename,
-			slug,
-			fileSize: uploadedFiles[0].size
-		};
 
-		if (uploadedFiles == undefined || uploadedFiles?.length < 1) {
+		if (!uploadedFile) {
 			apiError = {
 				status: 400,
 				message: 'No file has been selected'
@@ -60,9 +56,15 @@
 			return;
 		}
 
+		let newFile: NewFile = {
+			name: filename,
+			slug,
+			fileSize: uploadedFiles[0].size
+		};
+
 		try {
 			let url = await FileService.createFile(newFile);
-			let resp = await FileService.uploadFile(url.url, uploadedFiles[0], uploadedFiles[0].size);
+			let resp = await FileService.uploadFile(url.url, uploadedFile, uploadedFile.size);
 			if (resp.ok) {
 				dispatch('create');
 			} else {
@@ -82,7 +84,7 @@
 {#if large && !disabled}
 	<button
 		on:click={handleModalClick}
-		class="w-full py-28 border-2 border-dashed border-gray-400 rounded-md hover:bg-gray-100"
+		class="w-full py-28 border-2 text-lg border-gray-300 rounded-md hover:bg-gray-100"
 		>Click here to add your first Menu!
 	</button>
 {:else}
@@ -109,8 +111,8 @@
 		Upload file <span class="text-sm">(PDF only)</span>
 		<Fileupload accept="application/pdf" bind:files={uploadedFiles} />
 	</p>
-	<UrlCheck available={urlIsAvailable} loading={checkingUrl} />
-	{#if !checkingUrl && urlIsAvailable}
+	<UrlCheck bind:available={urlIsAvailable} {slug} />
+	{#if !checkingUrl && urlIsAvailable && uploadedFile}
 		<p class="text-base text-black dark:text-gray-400">
 			The file will be uploaded to: <br />
 			<span class="break-before-avoid text-blue-600">https://menulinkup.com/f/{slug}</span>

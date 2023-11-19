@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -48,7 +49,16 @@ func (api *API) CreateFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newFile, err := api.fileSvc.Create(ctx, userId, data)
-	if err != nil {
+	switch err {
+	case nil:
+	case files.ErrSlugAlreadyInUse:
+		logger.Warn("attempting to create file with invalid slug", log.Error(err))
+		render.Render(w, r, &responses.HttpResponse{
+			StatusCode: http.StatusConflict,
+			StatusText: "File with slug already exists",
+		})
+		return
+	default:
 		logger.Error("attempting to create file", log.Error(err))
 		render.Render(w, r, responses.ErrInternalServerError(err))
 		return
@@ -157,6 +167,35 @@ func (api *API) GetObjectStoreLinkForFile(w http.ResponseWriter, r *http.Request
 	}
 
 	render.JSON(w, r, link)
+}
+
+func (api *API) CheckFile(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	userId := internalContext.GetUserIdFromContext(ctx)
+	logger := api.l.With(log.UserId(userId), log.Context(ctx))
+
+	data := map[string]string{}
+	if err := render.Decode(r, &data); err != nil {
+		logger.Error("error parsing provided file data", log.Error(err))
+		render.Render(w, r, responses.ErrInvalidRequest(err))
+		return
+	}
+
+	slug, ok := data["slug"]
+	if !ok {
+		logger.Error("slug not provided in request")
+		render.Render(w, r, responses.ErrInvalidRequest(errors.New("slug not provided")))
+		return
+	}
+
+	exists := api.fileSvc.ExistsWithSlug(ctx, slug)
+	if exists {
+		logger.Info("file with slug already exists", log.String("slug", slug), log.Error(files.ErrSlugAlreadyInUse))
+		render.Render(w, r, responses.AlreadyExists("file"))
+		return
+	}
+
+	render.Status(r, http.StatusOK)
 }
 
 func getFileIdFromUrl(r *http.Request) (string, error) {

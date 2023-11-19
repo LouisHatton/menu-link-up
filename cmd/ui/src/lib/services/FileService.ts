@@ -1,4 +1,4 @@
-import NetworkService from './NetworkService';
+import NetworkService, { type ApiError } from './NetworkService';
 
 export type File = {
 	id: string;
@@ -49,8 +49,16 @@ export class FileService {
 		return NetworkService.get(`/api/v1/files/${fileId}/link`);
 	}
 
-	checkFileSlug(newFile: NewFile): Promise<boolean> {
-		return NetworkService.post('/api/v1/files/check', newFile);
+	async checkFileSlug(slug: string): Promise<boolean> {
+		try {
+			await NetworkService.post('/api/v1/check-file', {
+				slug
+			});
+			return true;
+		} catch (err: unknown) {
+			console.log(err as ApiError);
+			return false;
+		}
 	}
 }
 

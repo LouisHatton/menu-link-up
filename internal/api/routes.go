@@ -6,6 +6,7 @@ const (
 	FilesPath      = "/files"
 	FileIdPath     = FilesPath + FileUrlParam
 	FileIdLinkPath = FileIdPath + "/link"
+	CheckFilePath  = "/check-file"
 
 	UserIdParam  = "userId"
 	UserUrlParam = "/{" + UserIdParam + "}"

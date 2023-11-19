@@ -35,6 +35,11 @@ func New(logger *log.Logger, fileRepo files.Repository, objStoreSvc objectstore.
 func (svc *FileSvc) Create(ctx context.Context, userId string, newFile files.NewFile) (*files.FileUpload, error) {
 	logger := svc.logger.With(log.UserId(userId), log.Context(ctx))
 
+	exists := svc.ExistsWithSlug(ctx, newFile.Slug)
+	if exists {
+		return nil, files.ErrSlugAlreadyInUse
+	}
+
 	location, err := svc.objStoreSvc.GenerateFileLocation(ctx)
 	if err != nil {
 		msg := "attempting to generate objectstore location"
@@ -173,6 +178,15 @@ func (svc *FileSvc) GetById(ctx context.Context, id string) (*files.File, error)
 // GetByUserId implements files.Service.
 func (svc *FileSvc) GetByUserId(ctx context.Context, userId string) (*[]files.File, error) {
 	return svc.fileRepo.GetByUserId(ctx, userId)
+}
+
+// GetByUserId implements files.Service.
+func (svc *FileSvc) ExistsWithSlug(ctx context.Context, slug string) bool {
+	_, err := svc.fileRepo.GetBySlug(ctx, slug)
+	if err == nil { // No error - file found
+		return true
+	}
+	return false
 }
 
 func (svc *FileSvc) GetLinkFromSlug(ctx context.Context, slug string) (string, error) {

@@ -77,6 +77,13 @@ func ErrInternalServerError(err error) render.Renderer {
 	}
 }
 
+func AlreadyExists(name string) render.Renderer {
+	return &HttpResponse{
+		StatusCode: http.StatusConflict,
+		StatusText: fmt.Sprintf("%s already exists", name),
+	}
+}
+
 func Accepted() render.Renderer {
 	return &HttpResponse{
 		StatusCode: http.StatusAccepted,
