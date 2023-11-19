@@ -8,6 +8,7 @@
 	import LoadingButton from './LoadingButton.svelte';
 	import UrlCheck from './UrlCheck.svelte';
 	import Alert from './ErrorAlert.svelte';
+	import ErrorAlert from './ErrorAlert.svelte';
 
 	export let large = false;
 	export let disabled = false;
@@ -17,7 +18,7 @@
 	let uploadDisabled = true;
 	let loading = false;
 	let checkingUrl = false;
-	let urlIsAvailable = true;
+	let urlIsAvailable = false;
 
 	let slug = '';
 	let filename = '';
@@ -84,7 +85,7 @@
 {#if large && !disabled}
 	<button
 		on:click={handleModalClick}
-		class="w-full py-28 border-2 text-lg border-gray-300 rounded-md hover:bg-gray-100"
+		class="w-full py-28 text-2xl font-medium text-zinc-700 border-2 bg-stone-100 border-gray-300 rounded-3xl hover:bg-blue-100 hover:border-blue-600"
 		>Click here to add your first Menu!
 	</button>
 {:else}
@@ -107,10 +108,12 @@
 			}}
 		/>
 	</p>
-	<p>
-		Upload file <span class="text-sm">(PDF only)</span>
-		<Fileupload accept="application/pdf" bind:files={uploadedFiles} />
-	</p>
+	{#if openModal}
+		<p>
+			Upload file <span class="text-sm">(PDF only)</span>
+			<Fileupload accept="application/pdf" bind:files={uploadedFiles} />
+		</p>
+	{/if}
 	<UrlCheck bind:available={urlIsAvailable} {slug} />
 	{#if !checkingUrl && urlIsAvailable && uploadedFile}
 		<p class="text-base text-black dark:text-gray-400">
@@ -119,11 +122,7 @@
 		</p>
 	{/if}
 	{#if apiError}
-		<p class="text-red-600">Error: {apiError.message} ({apiError.status})</p>
+		<ErrorAlert err={apiError} />
 	{/if}
-	<svelte:fragment slot="footer">
-		<LoadingButton {loading} on:click={createNewFile} disabled={uploadDisabled}
-			>Upload</LoadingButton
-		>
-	</svelte:fragment>
+	<LoadingButton {loading} on:click={createNewFile} disabled={uploadDisabled}>Upload</LoadingButton>
 </Modal>

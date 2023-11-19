@@ -14,17 +14,19 @@
 	$: checkSlug(slug);
 
 	async function checkSlug(slug: string) {
+		available = false;
+		loading = true;
+
 		clearTimeout(timeout);
 		if (slug == '') {
-			available = false;
+			loading = false;
 			return;
 		}
 
-		loading = true;
 		timeout = setTimeout(async () => {
 			available = await FileService.checkFileSlug(slug);
 			loading = false;
-		}, 2500);
+		}, 1000);
 	}
 </script>
 

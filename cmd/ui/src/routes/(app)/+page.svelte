@@ -39,11 +39,11 @@
 </script>
 
 <PageWrapper>
-	<h2 class="text-4xl font-semibold">Welcome back {$authStore.user?.displayName ?? ''}!</h2>
-	<div class="mt-14">
+	<h2 class="text-4xl font-semibold text-center">Your Dashboard</h2>
+	<div class="mt-10">
 		<Card>
-			<h3 class="text-2xl font-semibold mb-4">
-				Your Menus: <span class="text-sm text-gray-500">(1/3)</span>
+			<h3 class="text-3xl font-semibold mb-6">
+				Menus <span class="text-sm font-medium text-gray-500">({files.length})</span>
 			</h3>
 			<PageLoader {loading}>
 				{#if filesError}
