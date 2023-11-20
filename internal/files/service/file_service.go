@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/LouisHatton/menu-link-up/internal/bandwidth"
 	internalContext "github.com/LouisHatton/menu-link-up/internal/context"
 	"github.com/LouisHatton/menu-link-up/internal/files"
 	"github.com/LouisHatton/menu-link-up/internal/log"
@@ -13,21 +14,23 @@ import (
 )
 
 type FileSvc struct {
-	fileRepo    files.Repository
-	objStoreSvc objectstore.Service
-	logger      *log.Logger
+	fileRepo     files.Repository
+	objStoreSvc  objectstore.Service
+	logger       *log.Logger
+	bandwidthSvc bandwidth.Service
 }
 
-func New(logger *log.Logger, fileRepo files.Repository, objStoreSvc objectstore.Service) (*FileSvc, error) {
+func New(logger *log.Logger, fileRepo files.Repository, objStoreSvc objectstore.Service, bandwidthSvc bandwidth.Service) (*FileSvc, error) {
 	err := fileRepo.Ping()
 	if err != nil {
 		return nil, err
 	}
 
 	return &FileSvc{
-		fileRepo:    fileRepo,
-		logger:      logger,
-		objStoreSvc: objStoreSvc,
+		fileRepo:     fileRepo,
+		logger:       logger,
+		objStoreSvc:  objStoreSvc,
+		bandwidthSvc: bandwidthSvc,
 	}, nil
 }
 
@@ -50,6 +53,18 @@ func (svc *FileSvc) Create(ctx context.Context, userId string, newFile files.New
 	url, err := svc.objStoreSvc.PresignedPut(ctx, location, newFile.FileSize, 15*time.Minute)
 	if err != nil {
 		msg := "attempting to create put url"
+		logger.Error(msg, log.Error(err))
+		return nil, fmt.Errorf(msg+": %w", err)
+	}
+
+	err = svc.bandwidthSvc.RecordDocumentUpload(ctx, userId, newFile.FileSize)
+	switch err {
+	case nil:
+	case bandwidth.ErrUploadLimitReached:
+		logger.Info("upload limit for user reached", log.Error(err))
+		return nil, err
+	default:
+		msg := "attempting to record document upload"
 		logger.Error(msg, log.Error(err))
 		return nil, fmt.Errorf(msg+": %w", err)
 	}
@@ -200,6 +215,18 @@ func (svc *FileSvc) GetLinkFromSlug(ctx context.Context, slug string) (string, e
 	}
 
 	logger = logger.With(log.FileId(file.ID))
+
+	err = svc.bandwidthSvc.RecordDocumentView(ctx, file.UserId, file.FileSize)
+	switch err {
+	case nil:
+	case bandwidth.ErrBytesTransferredLimitReached:
+		logger.Info("bandwidth limit for user reached", log.Error(err), log.UserId(file.UserId))
+		return "", err
+	default:
+		msg := "attempting to record document view"
+		logger.Error(msg, log.Error(err))
+		return "", fmt.Errorf(msg+": %w", err)
+	}
 
 	url, err := svc.objStoreSvc.PresignedGet(
 		ctx,

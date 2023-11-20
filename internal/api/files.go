@@ -6,11 +6,13 @@ import (
 	"net/http"
 
 	"github.com/LouisHatton/menu-link-up/internal/api/responses"
+	"github.com/LouisHatton/menu-link-up/internal/bandwidth"
 	internalContext "github.com/LouisHatton/menu-link-up/internal/context"
 	"github.com/LouisHatton/menu-link-up/internal/files"
 	"github.com/LouisHatton/menu-link-up/internal/log"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
+	"go.uber.org/zap"
 )
 
 func (api *API) GetFile(w http.ResponseWriter, r *http.Request) {
@@ -56,6 +58,13 @@ func (api *API) CreateFile(w http.ResponseWriter, r *http.Request) {
 		render.Render(w, r, &responses.HttpResponse{
 			StatusCode: http.StatusConflict,
 			StatusText: "File with slug already exists",
+		})
+		return
+	case bandwidth.ErrUploadLimitReached:
+		logger.Warn("user has reached file upload limit", log.Error(err), zap.Int("fileSize", data.FileSize))
+		render.Render(w, r, &responses.HttpResponse{
+			StatusCode: http.StatusTooManyRequests,
+			StatusText: "File upload limit reached, contact support",
 		})
 		return
 	default:
@@ -160,6 +169,13 @@ func (api *API) GetObjectStoreLinkForFile(w http.ResponseWriter, r *http.Request
 	case nil:
 	case files.ErrFileNotFound:
 		render.Render(w, r, responses.NotFoundResponse("file"))
+		return
+	case bandwidth.ErrBytesTransferredLimitReached:
+		logger.Info("the requested file's user has reached the bandwidth limit", log.Error(err))
+		render.Render(w, r, &responses.HttpResponse{
+			StatusCode: http.StatusTooManyRequests,
+			StatusText: "Too many requests",
+		})
 		return
 	default:
 		logger.Error("attempting to get link from slug", log.Error(err))

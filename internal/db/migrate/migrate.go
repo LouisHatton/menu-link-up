@@ -26,12 +26,38 @@ CREATE TABLE IF NOT EXISTS files (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );`
 
-func RunMigrate(db *sql.DB) error {
-	_, err := db.Exec(createUserTable)
-	if err != nil {
-		return err
+var createBandwidthTable string = `
+CREATE TABLE IF NOT EXISTS monthly_bandwidth (
+    id VARCHAR(255) NOT NULL,
+    user_id VARCHAR(255) NOT NULL,
+    month INT NOT NULL,
+    year INT NOT NULL,
+    bytes_transferred BIGINT NOT NULL,
+    bytes_transferred_limit BIGINT NOT NULL,
+    bytes_uploaded BIGINT NOT NULL,
+    bytes_uploaded_limit BIGINT NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);`
+
+var createBandwidthIndexes string = `
+CREATE INDEX IF NOT EXISTS monthly_bandwidth_user_year_month_index ON monthly_bandwidth (user_id, year, month);`
+
+func RunMigrate(db *sql.DB) []error {
+	var commands []*string = []*string{
+		&createUserTable,
+		&createFilesTable,
+		&createBandwidthTable,
+		&createBandwidthIndexes,
+	}
+	var errors []error
+
+	for _, command := range commands {
+		_, err := db.Exec(*command)
+		if err != nil {
+			errors = append(errors, err)
+		}
 	}
 
-	_, err = db.Exec(createFilesTable)
-	return err
+	return errors
 }

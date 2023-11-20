@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/LouisHatton/menu-link-up/internal/common/errors"
 	"github.com/LouisHatton/menu-link-up/internal/config/appconfig"
 	"github.com/LouisHatton/menu-link-up/internal/db/migrate"
 	"github.com/LouisHatton/menu-link-up/internal/log"
@@ -32,9 +33,9 @@ func Connect(logger *log.Logger, cfg *appconfig.Database) (*sql.DB, error) {
 		return nil, err
 	}
 
-	err = migrate.RunMigrate(db)
-	if err != nil {
-		logger.Error("error running db migration", log.Error(err))
+	errs := migrate.RunMigrate(db)
+	if len(errs) > 0 {
+		logger.Error("errors encountered running db migration", log.Error(errors.Combine(errs)))
 		return nil, err
 	}
 

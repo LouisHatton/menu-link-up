@@ -7,6 +7,8 @@ import (
 	firebase "firebase.google.com/go/v4"
 	"github.com/LouisHatton/menu-link-up/internal/api"
 	api_middleware "github.com/LouisHatton/menu-link-up/internal/api/middleware"
+	bandwidth_repository "github.com/LouisHatton/menu-link-up/internal/bandwidth/repository"
+	bandwidth_service "github.com/LouisHatton/menu-link-up/internal/bandwidth/service"
 	"github.com/LouisHatton/menu-link-up/internal/config/appconfig"
 	"github.com/LouisHatton/menu-link-up/internal/db/connection"
 	files_repository "github.com/LouisHatton/menu-link-up/internal/files/repository"
@@ -66,6 +68,12 @@ func main() {
 	}
 	defer db.Close()
 
+	// --- User SVC
+	userSvc, err := users_service.New(logger, authClient, users_repository.New(db))
+	if err != nil {
+		logger.Fatal("error initializing users service", log.Error(err))
+	}
+
 	// --- AWS
 	awsSession, err := session.NewSession(&aws.Config{Region: aws.String(cfg.AWS_S3.Region)})
 	if err != nil {
@@ -77,16 +85,16 @@ func main() {
 		logger.Fatal("error creating s3 objectstore service", log.Error(err))
 	}
 
-	// --- File SVC
-	fileSvc, err := files_service.New(logger, files_repository.New(db), s3_objectstore)
+	// --- Bandwidth Svc
+	bandwidthSvc, err := bandwidth_service.New(logger, bandwidth_repository.New(db), userSvc)
 	if err != nil {
-		logger.Fatal("error initializing files service", log.Error(err))
+		logger.Fatal("error creating bandwidth service", log.Error(err))
 	}
 
-	// --- User SVC
-	userSvc, err := users_service.New(logger, authClient, users_repository.New(db))
+	// --- File SVC
+	fileSvc, err := files_service.New(logger, files_repository.New(db), s3_objectstore, bandwidthSvc)
 	if err != nil {
-		logger.Fatal("error initializing users service", log.Error(err))
+		logger.Fatal("error initializing files service", log.Error(err))
 	}
 
 	r := chi.NewRouter()

@@ -16,3 +16,8 @@ func AuthUserRecordToUser(user *auth.UserRecord) User {
 		Email: user.Email,
 	}
 }
+
+type BandwidthLimits struct {
+	BytesTransferredLimit int64 `json:"bytesTransferredLimit"`
+	BytesUploadedLimit    int64 `json:"bytesUploadedLimit"`
+}

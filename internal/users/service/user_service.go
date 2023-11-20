@@ -108,3 +108,13 @@ func (svc *UserService) createClientUserInRepo(ctx context.Context, id string) (
 
 	return &user, nil
 }
+
+func (svc *UserService) GetBandwidthLimits(ctx context.Context, id string) (*users.BandwidthLimits, error) {
+	// ctxUserId := internal_context.GetUserIdFromContext(ctx)
+	// logger := svc.logger.With(log.Context(ctx), log.UserId(ctxUserId), log.RequestedId(id))
+
+	return &users.BandwidthLimits{
+		BytesTransferredLimit: 10485760, // 10 MB
+		BytesUploadedLimit:    10485760,
+	}, nil
+}
