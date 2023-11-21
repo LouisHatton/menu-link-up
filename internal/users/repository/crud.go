@@ -8,7 +8,7 @@ import (
 	"github.com/LouisHatton/menu-link-up/internal/users"
 )
 
-var selectAll string = "SELECT `id`, `email`, `stripe_customer_id` FROM `users` "
+var selectAll string = "SELECT `id`, `email`, `stripe_customer_id`, `stripe_subscription_id`, `subscription_status`, `bytes_transferred_limit`, `bytes_uploaded_limit`, `file_size_limit`, `file_upload_limit` FROM `users` "
 
 func selectAllScan(rows *sql.Rows) (users.User, error) {
 	var user users.User
@@ -16,6 +16,12 @@ func selectAllScan(rows *sql.Rows) (users.User, error) {
 		&user.ID,
 		&user.Email,
 		&user.StripeCustomerId,
+		&user.StripeSubscriptionId,
+		&user.SubscriptionStatus,
+		&user.BytesTransferredLimit,
+		&user.BytesUploadedLimit,
+		&user.FileSizeLimit,
+		&user.FileUploadLimit,
 	)
 	return user, err
 }
@@ -79,12 +85,18 @@ func (r *UserRepo) GetById(ctx context.Context, id string) (*users.User, error) 
 
 // Update implements users.Repository.
 func (r *UserRepo) Create(ctx context.Context, user *users.User) error {
-	query := "INSERT INTO `users` (`id`, `email`, `stripe_customer_id`) VALUES (?, ?, ?)"
+	query := "INSERT INTO `users` (`id`, `email`, `stripe_customer_id`, `stripe_subscription_id`, `subscription_status`, `bytes_transferred_limit`, `bytes_uploaded_limit`, `file_size_limit`, `file_upload_limit`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 	_, err := r.db.ExecContext(ctx, query,
 		user.ID,
 		user.Email,
 		user.StripeCustomerId,
+		user.StripeSubscriptionId,
+		user.SubscriptionStatus,
+		user.BytesTransferredLimit,
+		user.BytesUploadedLimit,
+		user.FileSizeLimit,
+		user.FileUploadLimit,
 	)
 	if err != nil {
 		return fmt.Errorf("unable to insert user: %w", err)
@@ -95,11 +107,17 @@ func (r *UserRepo) Create(ctx context.Context, user *users.User) error {
 
 // Update implements users.Repository.
 func (r *UserRepo) Update(ctx context.Context, user *users.User) error {
-	query := "UPDATE `users` SET `email` = ?, `stripe_customer_id` = ?, WHERE `id` = ?"
+	query := "UPDATE `users` SET `email` = ?, `stripe_customer_id` = ?,  `stripe_subscription_id` = ?, `subscription_status` = ?,  `bytes_transferred_limit` = ?, `bytes_uploaded_limit` = ?, `file_size_limit` = ?, `file_upload_limit` = ? WHERE `id` = ?"
 
 	_, err := r.db.ExecContext(ctx, query,
 		user.Email,
 		user.StripeCustomerId,
+		user.StripeSubscriptionId,
+		user.SubscriptionStatus,
+		user.BytesTransferredLimit,
+		user.BytesUploadedLimit,
+		user.FileSizeLimit,
+		user.FileUploadLimit,
 		user.ID,
 	)
 	if err != nil {

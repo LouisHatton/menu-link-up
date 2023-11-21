@@ -7,6 +7,12 @@ CREATE TABLE IF NOT EXISTS users (
     id VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
     stripe_customer_id VARCHAR(255) NOT NULL,
+    stripe_subscription_id VARCHAR(255) NOT NULL,
+    subscription_status VARCHAR(255) NOT NULL,
+    bytes_transferred_limit BIGINT NOT NULL,
+    bytes_uploaded_limit BIGINT NOT NULL,
+    file_size_limit BIGINT NOT NULL,
+    file_upload_limit INT NOT NULL,
     PRIMARY KEY (id)
 );`
 

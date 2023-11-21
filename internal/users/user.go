@@ -5,9 +5,15 @@ import (
 )
 
 type User struct {
-	ID               string `json:"id"`
-	Email            string `json:"email"`
-	StripeCustomerId string `json:"stripeCustomerId"`
+	ID                    string `json:"id"`
+	Email                 string `json:"email"`
+	StripeCustomerId      string `json:"stripeCustomerId"`
+	StripeSubscriptionId  string `json:"stripeSubscriptionId"`
+	SubscriptionStatus    string `json:"subscriptionStatus"`
+	BytesTransferredLimit int64  `json:"bytesTransferredLimit"`
+	BytesUploadedLimit    int64  `json:"bytesUploadedLimit"`
+	FileSizeLimit         int64  `json:"fileSizeLimit"`
+	FileUploadLimit       int    `json:"fileUploadLimit"`
 }
 
 func AuthUserRecordToUser(user *auth.UserRecord) User {
