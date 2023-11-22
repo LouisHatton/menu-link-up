@@ -45,7 +45,7 @@ func (svc *BandwidthSvc) RecordDocumentUpload(ctx context.Context, userId string
 		return fmt.Errorf(msg+": %w", err)
 	}
 
-	if record.BytesUploaded > record.BytesUploadedLimit {
+	if record.BytesUploaded >= record.BytesUploadedLimit {
 		return bandwidth.ErrUploadLimitReached
 	}
 
@@ -70,7 +70,7 @@ func (svc *BandwidthSvc) RecordDocumentView(ctx context.Context, userId string, 
 		return fmt.Errorf(msg+": %w", err)
 	}
 
-	if record.BytesTransferred > record.BytesTransferredLimit {
+	if record.BytesTransferred >= record.BytesTransferredLimit {
 		return bandwidth.ErrBytesTransferredLimitReached
 	}
 
@@ -131,6 +131,10 @@ func (svc *BandwidthSvc) createUsersMonthsRecord(ctx context.Context, userId str
 	}
 
 	return &newRecord, nil
+}
+
+func (svc *BandwidthSvc) DeleteAllUserRecords(ctx context.Context, userId string) error {
+	return svc.repo.DeleteByUserId(ctx, userId)
 }
 
 var _ bandwidth.Service = &BandwidthSvc{}

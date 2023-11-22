@@ -9,8 +9,8 @@ import {
 	type User,
 	createUserWithEmailAndPassword,
 	GoogleAuthProvider,
-	signInWithPopup,
-	signInWithRedirect
+	signInWithRedirect,
+	sendEmailVerification
 } from 'firebase/auth';
 
 const firebaseConfig: FirebaseOptions = {
@@ -56,11 +56,35 @@ class AuthenticationService {
 	}
 
 	async logOut() {
+		localStorage.removeItem('sent-verify-email');
 		return this.auth.signOut();
 	}
 
 	async getToken() {
 		return this.auth.currentUser?.getIdToken();
+	}
+
+	async reloadUser() {
+		await this.auth.currentUser?.reload();
+		authStore.set({
+			isLoggedIn: this.auth.currentUser != null,
+			user: this.auth.currentUser,
+			initialised: true
+		});
+	}
+
+	async sendVerifyEmail(force: boolean) {
+		if (!this.currentUser) throw new Error('not logged in!');
+
+		if (!force) {
+			let sent = localStorage.getItem('sent-verify-email');
+			if (sent != null) {
+				return;
+			}
+		}
+
+		localStorage.setItem('sent-verify-email', 'true');
+		await sendEmailVerification(this.currentUser);
 	}
 }
 

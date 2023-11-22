@@ -2,17 +2,25 @@
 	import AuthenticationService from '$lib/services/AuthenticationService';
 	import { Button, Label, Input, Spinner } from 'flowbite-svelte';
 	import SignInWithGoogle from '../SignInWithGoogle.svelte';
+	import ErrorAlert from '$lib/components/ErrorAlert.svelte';
 
 	let email: string;
 	let password: string;
 	let loading = false;
+	let errorMessage = '';
 
 	async function handleLogin(e: MouseEvent) {
 		e.preventDefault();
 		loading = true;
-		await AuthenticationService.signInWithPassword(email, password);
-		console.log(AuthenticationService.currentUser);
-		loading = false;
+		errorMessage = '';
+		try {
+			await AuthenticationService.signInWithPassword(email, password);
+		} catch (err: unknown) {
+			errorMessage =
+				'There was an issue with your login, please check your email and password and try again';
+		} finally {
+			loading = false;
+		}
 	}
 </script>
 
@@ -24,6 +32,9 @@
 		</div>
 		<form class="flex flex-col space-y-6" action="/">
 			<h3 class="text-xl font-medium text-gray-900 dark:text-white p-0">Login</h3>
+			{#if errorMessage != ''}
+				<ErrorAlert>{errorMessage}</ErrorAlert>
+			{/if}
 			<Label class="space-y-2">
 				<span>Your email</span>
 				<Input

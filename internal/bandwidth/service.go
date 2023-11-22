@@ -16,4 +16,6 @@ type Service interface {
 	// and operation is not logged.
 	//	err := bandwidth.ErrUploadLimitReached
 	RecordDocumentUpload(ctx context.Context, userId string, fileSize int) error
+
+	DeleteAllUserRecords(ctx context.Context, userId string) error
 }

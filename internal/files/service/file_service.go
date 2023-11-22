@@ -136,6 +136,13 @@ func (svc *FileSvc) DeleteByUserId(ctx context.Context, userId string) error {
 	requestingUserId := internalContext.GetUserIdFromContext(ctx)
 	logger := svc.logger.With(log.UserId(requestingUserId), log.Context(ctx), log.RequestedId(userId))
 
+	err := svc.bandwidthSvc.DeleteAllUserRecords(ctx, userId)
+	if err != nil {
+		msg := "unable to delete all users bandwidth records"
+		logger.Error(msg, log.Error(err))
+		return fmt.Errorf(msg+": %w", err)
+	}
+
 	files, err := svc.GetByUserId(ctx, userId)
 	if err != nil {
 		msg := "unable to get users files to delete"

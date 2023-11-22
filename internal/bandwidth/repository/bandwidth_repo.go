@@ -79,3 +79,14 @@ func (r *BandwidthRepo) IncreaseBytesUploaded(ctx context.Context, id string, by
 
 	return nil
 }
+
+func (r *BandwidthRepo) DeleteByUserId(ctx context.Context, userId string) error {
+	query := "DELETE FROM `monthly_bandwidth` WHERE `user_id` = ?"
+
+	_, err := r.db.ExecContext(ctx, query, userId)
+	if err != nil {
+		return fmt.Errorf("unable to delete all monthly_bandwidth records for user: %w", err)
+	}
+
+	return nil
+}

@@ -16,7 +16,7 @@
 	let errorMessage = '';
 
 	async function handleClick(e: MouseEvent) {
-		let loading = true;
+		loading = true;
 		e.preventDefault();
 		errorMessage = '';
 		if (!validateEmail(email)) {

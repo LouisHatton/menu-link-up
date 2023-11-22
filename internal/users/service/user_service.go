@@ -45,8 +45,13 @@ func (svc *UserService) GetById(ctx context.Context, id string) (*users.User, er
 	case nil:
 	case users.ErrUserNotFound:
 		repoUser, err = svc.createClientUserInRepo(ctx, id)
-		if err != nil {
-			msg := "attempting to create the client user in the repository"
+		msg := "attempting to create the client user in the repository"
+		switch err {
+		case nil:
+		case users.ErrEmailNotVerified:
+			logger.Error(msg, zap.Error(err))
+			return nil, err
+		default:
 			logger.Error(msg, zap.Error(err))
 			return nil, fmt.Errorf(msg+": %w", err)
 		}
@@ -97,8 +102,11 @@ func (svc *UserService) createClientUserInRepo(ctx context.Context, id string) (
 		return nil, fmt.Errorf(msg+": %w", err)
 	}
 
-	user := users.AuthUserRecordToUser(authRecord)
+	if !authRecord.EmailVerified {
+		return nil, users.ErrEmailNotVerified
+	}
 
+	user := users.AuthUserRecordToUser(authRecord)
 	err = svc.repo.Create(ctx, &user)
 	if err != nil {
 		msg := "attempting to store user from client into repository"
@@ -110,11 +118,17 @@ func (svc *UserService) createClientUserInRepo(ctx context.Context, id string) (
 }
 
 func (svc *UserService) GetBandwidthLimits(ctx context.Context, id string) (*users.BandwidthLimits, error) {
-	// ctxUserId := internal_context.GetUserIdFromContext(ctx)
-	// logger := svc.logger.With(log.Context(ctx), log.UserId(ctxUserId), log.RequestedId(id))
+	ctxUserId := internal_context.GetUserIdFromContext(ctx)
+	logger := svc.logger.With(log.Context(ctx), log.UserId(ctxUserId), log.RequestedId(id))
+
+	user, err := svc.GetById(ctx, id)
+	if err != nil {
+		logger.Error("attempting to get user to return bandwidth limits", log.Error(err))
+		return nil, err
+	}
 
 	return &users.BandwidthLimits{
-		BytesTransferredLimit: 10485760, // 10 MB
-		BytesUploadedLimit:    10485760,
+		BytesTransferredLimit: user.BytesTransferredLimit,
+		BytesUploadedLimit:    user.BytesUploadedLimit,
 	}, nil
 }
