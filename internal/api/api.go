@@ -69,6 +69,7 @@ func (api API) Register(r chi.Router) error {
 
 			// Users
 			r.Get(UserIdPath, api.GetUser)
+			r.Get(UserBillingPath, api.GetUserBilling)
 			r.Delete(UserIdPath, api.DeleteUser)
 		})
 

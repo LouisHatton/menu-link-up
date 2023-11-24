@@ -10,11 +10,33 @@ export type DbUser = {
 	trialEnd: string | null;
 };
 
+export type Billing = {
+	planName: string;
+	billingInterval: 'month' | 'year';
+	price: number;
+	currentPeriodEnd?: string;
+	cancelAtPeriodEnd: boolean;
+	defaultPayment?: BillingDefaultPayment;
+};
+
+export type BillingDefaultPayment = {
+	brand?: string;
+	expiresMonth?: number;
+	expiresYear?: number;
+	lastFour?: string;
+};
+
 class UserService {
 	async getUser(): Promise<DbUser> {
 		let currentUser = AuthenticationService.currentUser;
 		if (!currentUser) throw new Error('Not currently logged in');
 		return NetworkService.get(`api/v1/users/${currentUser.uid}`);
+	}
+
+	async getUserBilling(): Promise<Billing> {
+		let currentUser = AuthenticationService.currentUser;
+		if (!currentUser) throw new Error('Not currently logged in');
+		return NetworkService.get(`api/v1/users/${currentUser.uid}/billing`);
 	}
 
 	async deleteUser(): Promise<unknown> {

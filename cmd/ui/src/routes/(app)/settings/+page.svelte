@@ -5,39 +5,30 @@
 	import PageWrapper from '$lib/components/PageWrapper.svelte';
 	import { authStore } from '$lib/stores/authStore';
 	import { Button, ChevronLeft, Input, Label } from 'flowbite-svelte';
-	import UserService from '$lib/services/UserService';
+	import UserService, { type Billing } from '$lib/services/UserService';
 	import LoadingButton from '$lib/components/LoadingButton.svelte';
 	import AuthenticationService from '$lib/services/AuthenticationService';
 	import Arrow from '$lib/icons/Arrow.svelte';
 	import type { ApiError } from '$lib/services/NetworkService';
 	import TrialExpiresSoon from '$lib/components/TrialExpiresSoon.svelte';
+	import PageLoader from '$lib/components/PageLoader.svelte';
+	import dayjs from 'dayjs';
+	import { dateNumMonthYear } from '$lib/util';
 
-	let emailAddress = '';
-	let name = '';
-	let saving = false;
 	let deleting = false;
-	let loadingData = true;
+	let loading = true;
+	let billingInfo: Billing | undefined;
 
-	$: $authStore.user ? updateVars($authStore.user) : (loadingData = true);
+	$: getBillingInfo();
 
-	function updateVars(user: User) {
-		loadingData = false;
-		if (user.email) {
-			emailAddress = user.email;
+	async function getBillingInfo() {
+		loading = true;
+		try {
+			billingInfo = await UserService.getUserBilling();
+		} catch (err: unknown) {
+		} finally {
+			loading = false;
 		}
-		if (user.displayName) {
-			name = user.displayName;
-		}
-	}
-
-	async function handleClick() {
-		saving = true;
-		await UserService.updateUserDisplayName(name);
-		saving = false;
-	}
-
-	async function handleResetPassword() {
-		console.log(await AuthenticationService.getToken());
 	}
 
 	async function handleDeleteAccount() {
@@ -63,34 +54,46 @@
 		Go back to the Dashboard
 	</a>
 	<h2 class="text-4xl font-semibold">Settings</h2>
-	<div class="flex flex-col gap-6 mt-14">
-		<Card class="col-span-2">
-			<h3 class="text-2xl font-semibold">Your Current Plan</h3>
-			<TrialExpiresSoon />
-			<div class="mt-6 flex flex-row justify-between items-center">
-				<div>
-					<p class="text-lg">Basic Plan (£5/month)</p>
-					<p class="">Renews on: 4th December</p>
+	<PageLoader {loading} size="2xl">
+		<div class="flex flex-col gap-6 mt-14">
+			<Card class="col-span-2">
+				<h3 class="text-2xl font-semibold">Your Current Plan</h3>
+				<TrialExpiresSoon />
+				<div class="mt-6 flex flex-row justify-between items-center">
+					<div>
+						<p class="text-lg">
+							{billingInfo?.planName} (£{(billingInfo?.price ?? 0) /
+								100}/{billingInfo?.billingInterval})
+						</p>
+						<p class="">Renews: {dateNumMonthYear(billingInfo?.currentPeriodEnd ?? '')}</p>
+					</div>
+					<Button color="dark">Change Plan</Button>
 				</div>
-				<Button color="dark">Change Plan</Button>
-			</div>
-			<div class="my-8 border-t border-gray-200" />
-			<h3 class="text-2xl font-semibold">Billing Information</h3>
-			<div class="mt-6 flex flex-row justify-between items-center">
-				<div>
-					<p class="text-lg">No card on file</p>
-					<p class="">Unknown Expiry</p>
+				<div class="my-8 border-t border-gray-200" />
+				<h3 class="text-2xl font-semibold">Billing Information</h3>
+				<div class="mt-6 flex flex-row justify-between items-center">
+					<div>
+						<p class="text-lg">
+							{#if billingInfo?.defaultPayment?.brand && billingInfo?.defaultPayment.lastFour}{billingInfo
+									.defaultPayment.brand}(billingInfo.defaultPayment.lastFour){:else}No card on file{/if}
+						</p>
+						<p class="">
+							{#if billingInfo?.defaultPayment?.expiresMonth && billingInfo?.defaultPayment.expiresYear}Expires
+								{billingInfo?.defaultPayment.expiresMonth}/{billingInfo?.defaultPayment
+									.expiresYear}{:else}Unknown Expiry{/if}
+						</p>
+					</div>
+					<Button color="dark">Update Billing Information</Button>
 				</div>
-				<Button color="dark">Update Billing Information</Button>
-			</div>
-		</Card>
-		<div>
-			<Card>
-				<h4 class="text-lg font-semibold mb-4">Danger Zone</h4>
-				<LoadingButton color="red" on:click={handleDeleteAccount} loading={deleting}
-					>Delete Account</LoadingButton
-				>
 			</Card>
+			<div>
+				<Card>
+					<h4 class="text-lg font-semibold mb-4">Danger Zone</h4>
+					<LoadingButton color="red" on:click={handleDeleteAccount} loading={deleting}
+						>Delete Account</LoadingButton
+					>
+				</Card>
+			</div>
 		</div>
-	</div>
+	</PageLoader>
 </PageWrapper>

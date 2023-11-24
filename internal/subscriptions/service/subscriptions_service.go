@@ -114,4 +114,11 @@ func (svc *SubscriptionSvc) GetProduct(ctx context.Context, productId string) (*
 	return product.Get(productId, nil)
 }
 
+func (svc *SubscriptionSvc) GetCustomer(ctx context.Context, customerId string) (*stripe.Customer, error) {
+	params := &stripe.CustomerParams{}
+	params.AddExpand("invoice_settings.default_payment_method")
+
+	return customer.Get(customerId, params)
+}
+
 var _ subscriptions.Service = &SubscriptionSvc{}

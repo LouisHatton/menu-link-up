@@ -62,3 +62,26 @@ func (api *API) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	logger.Info("user deleted")
 	render.Status(r, http.StatusOK)
 }
+
+func (api *API) GetUserBilling(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	userId := internal_context.GetUserIdFromContext(ctx)
+	logger := api.l.With(log.UserId(userId), log.Context(ctx))
+
+	requestedId := chi.URLParam(r, UserIdParam)
+	logger = logger.With(log.RequestedId(requestedId))
+	if requestedId != userId {
+		logger.Warn("user attempting to get someone else")
+		render.Render(w, r, responses.ErrForbidden())
+		return
+	}
+
+	billing, err := api.userSvc.GetBilling(ctx, userId)
+	if err != nil {
+		logger.Error("attempting get user billing", log.Error(err))
+		render.Render(w, r, responses.ErrInternalServerError(err))
+		return
+	}
+
+	render.JSON(w, r, billing)
+}

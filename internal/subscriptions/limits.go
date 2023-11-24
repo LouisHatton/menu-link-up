@@ -3,8 +3,10 @@ package subscriptions
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/LouisHatton/menu-link-up/internal/users"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/stripe/stripe-go/v76"
 )
 
@@ -41,4 +43,8 @@ func ExtractLimitsFromProduct(product *stripe.Product) (*users.BandwidthLimits, 
 
 	return &limits, nil
 
+}
+
+func StripeTime(in int64) *time.Time {
+	return aws.Time(time.Unix(in, 0))
 }

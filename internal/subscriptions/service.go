@@ -12,4 +12,5 @@ type Service interface {
 	GetLimitsForSubscription(ctx context.Context, subscriptionId string) (*users.BandwidthLimits, error)
 	GetSubscription(ctx context.Context, subscriptionId string) (*stripe.Subscription, error)
 	GetProduct(ctx context.Context, productId string) (*stripe.Product, error)
+	GetCustomer(ctx context.Context, customerId string) (*stripe.Customer, error)
 }

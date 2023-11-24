@@ -33,3 +33,7 @@ export function sanitiseSlug(str: string) {
 export function timeFromNow(time: string): string {
 	return dayjs(time).fromNow();
 }
+
+export function dateNumMonthYear(date: string): string {
+	return dayjs(date).format('D MMM YYYY');
+}
