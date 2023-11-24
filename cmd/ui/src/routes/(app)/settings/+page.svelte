@@ -10,6 +10,7 @@
 	import AuthenticationService from '$lib/services/AuthenticationService';
 	import Arrow from '$lib/icons/Arrow.svelte';
 	import type { ApiError } from '$lib/services/NetworkService';
+	import TrialExpiresSoon from '$lib/components/TrialExpiresSoon.svelte';
 
 	let emailAddress = '';
 	let name = '';
@@ -62,22 +63,25 @@
 		Go back to the Dashboard
 	</a>
 	<h2 class="text-4xl font-semibold">Settings</h2>
-	<div class="grid grid-cols-3 gap-6 mt-14">
+	<div class="flex flex-col gap-6 mt-14">
 		<Card class="col-span-2">
-			<h3 class="text-2xl font-semibold">Your Account</h3>
-			<div class="mt-6">
+			<h3 class="text-2xl font-semibold">Your Current Plan</h3>
+			<TrialExpiresSoon />
+			<div class="mt-6 flex flex-row justify-between items-center">
 				<div>
-					<Label class="mb-2">Your Name:</Label>
-					<Input disabled={loadingData} class="mb-4" bind:value={name} />
+					<p class="text-lg">Basic Plan (£5/month)</p>
+					<p class="">Renews on: 4th December</p>
 				</div>
+				<Button color="dark">Change Plan</Button>
+			</div>
+			<div class="my-8 border-t border-gray-200" />
+			<h3 class="text-2xl font-semibold">Billing Information</h3>
+			<div class="mt-6 flex flex-row justify-between items-center">
 				<div>
-					<Label class="mb-2">Email Address:</Label>
-					<Input disabled class="mb-4" bind:value={emailAddress} />
+					<p class="text-lg">No card on file</p>
+					<p class="">Unknown Expiry</p>
 				</div>
-				<div class="flex flex-row justify-between">
-					<LoadingButton color="blue" loading={saving} on:click={handleClick}>Save</LoadingButton>
-					<Button color="light" on:click={handleResetPassword}>Change Password</Button>
-				</div>
+				<Button color="dark">Update Billing Information</Button>
 			</div>
 		</Card>
 		<div>

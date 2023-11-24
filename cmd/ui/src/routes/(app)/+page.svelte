@@ -1,5 +1,6 @@
 <script lang="ts">
 	import AddNewFile from '$lib/components/AddNewFile.svelte';
+	import Banner from '$lib/components/Banner.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import DeleteFile from '$lib/components/DeleteFile.svelte';
 	import ErrorAlert from '$lib/components/ErrorAlert.svelte';
@@ -19,6 +20,8 @@
 		TableHead,
 		TableHeadCell
 	} from 'flowbite-svelte';
+	import dayjs from 'dayjs';
+	import { timeFromNow } from '$lib/util';
 
 	let loading = false;
 	let filesError: ApiError | undefined = undefined;
@@ -38,6 +41,25 @@
 	}
 </script>
 
+{#if $authStore.dbUser?.subscriptionStatus === 'trialing'}
+	<Banner href="/settings">
+		<p>
+			Your trial expires
+			<strong>
+				{#if $authStore.dbUser.trialEnd}
+					{timeFromNow($authStore.dbUser.trialEnd)}
+				{:else}
+					soon
+				{/if}
+				🔒</strong
+			>
+		</p>
+		<p>
+			To continue using MenuLink-Up, please add your billing info <strong>here</strong> before your trial
+			finishes.
+		</p>
+	</Banner>
+{/if}
 <PageWrapper>
 	<h2 class="text-4xl font-semibold text-center">Your Dashboard</h2>
 	<div class="mt-10">

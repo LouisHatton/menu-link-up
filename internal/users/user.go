@@ -1,6 +1,8 @@
 package users
 
 import (
+	"time"
+
 	"firebase.google.com/go/v4/auth"
 	"github.com/stripe/stripe-go/v76"
 )
@@ -11,6 +13,7 @@ type User struct {
 	StripeCustomerId      string                    `json:"stripeCustomerId"`
 	StripeSubscriptionId  string                    `json:"stripeSubscriptionId"`
 	SubscriptionStatus    stripe.SubscriptionStatus `json:"subscriptionStatus"`
+	TrialEnd              *time.Time                `json:"trialEnd,omitempty"`
 	BytesTransferredLimit int64                     `json:"-"`
 	BytesUploadedLimit    int64                     `json:"-"`
 	FileSizeLimit         int64                     `json:"fileSizeLimit"`

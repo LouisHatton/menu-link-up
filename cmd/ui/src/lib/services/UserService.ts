@@ -6,6 +6,8 @@ export type DbUser = {
 	id: string;
 	email: string;
 	stripeCustomerId: string;
+	subscriptionStatus: 'trialing' | 'active' | 'cancelled';
+	trialEnd: string | null;
 };
 
 class UserService {

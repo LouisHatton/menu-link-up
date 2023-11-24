@@ -3,12 +3,15 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"firebase.google.com/go/v4/auth"
 	internal_context "github.com/LouisHatton/menu-link-up/internal/context"
 	"github.com/LouisHatton/menu-link-up/internal/log"
 	"github.com/LouisHatton/menu-link-up/internal/subscriptions"
 	"github.com/LouisHatton/menu-link-up/internal/users"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/stripe/stripe-go/v76"
 	"go.uber.org/zap"
 )
 
@@ -63,6 +66,16 @@ func (svc *UserService) GetById(ctx context.Context, id string) (*users.User, er
 		logger.Error(msg, zap.Error(err))
 		return nil, fmt.Errorf(msg+": %w", err)
 
+	}
+
+	if repoUser.SubscriptionStatus == stripe.SubscriptionStatusTrialing && repoUser.TrialEnd == nil {
+		sub, err := svc.subscriptionSvc.GetSubscription(ctx, repoUser.StripeSubscriptionId)
+		if err != nil {
+			msg := "attempting to fetch user's subscription for trial end"
+			logger.Warn(msg, zap.Error(err))
+		} else {
+			repoUser.TrialEnd = aws.Time(time.Unix(sub.TrialEnd, 0))
+		}
 	}
 
 	return repoUser, nil
@@ -125,6 +138,7 @@ func (svc *UserService) createClientUserInRepo(ctx context.Context, id string) (
 	user.StripeCustomerId = customer.ID
 	user.StripeSubscriptionId = subscription.ID
 	user.SubscriptionStatus = subscription.Status
+	user.TrialEnd = aws.Time(time.Unix(subscription.TrialEnd, 0))
 
 	limits, err := svc.subscriptionSvc.GetLimitsForSubscription(ctx, subscription.ID)
 	if err != nil {

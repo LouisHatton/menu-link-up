@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Banner from '$lib/components/Banner.svelte';
 	import PageLoader from '$lib/components/PageLoader.svelte';
 	import VerifyEmail from '$lib/components/VerifyEmail.svelte';
 	import type { ApiError } from '$lib/services/NetworkService';

@@ -1,3 +1,8 @@
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(relativeTime);
+
 export function classnames(...names: string[]) {
 	return names.join(' ');
 }
@@ -23,4 +28,8 @@ export function sanitiseSlug(str: string) {
 		.replace(/[^\w\s-]/g, '') // Remove non-word characters except spaces and hyphens
 		.trim() // Trim leading/trailing spaces
 		.replace(/-+/g, '-'); // Replace multiple - with single -
+}
+
+export function timeFromNow(time: string): string {
+	return dayjs(time).fromNow();
 }
