@@ -15,6 +15,7 @@ import (
 	files_service "github.com/LouisHatton/menu-link-up/internal/files/service"
 	"github.com/LouisHatton/menu-link-up/internal/log"
 	s3_service "github.com/LouisHatton/menu-link-up/internal/objectstore/s3/service"
+	subscriptions_service "github.com/LouisHatton/menu-link-up/internal/subscriptions/service"
 	users_repository "github.com/LouisHatton/menu-link-up/internal/users/repository"
 	users_service "github.com/LouisHatton/menu-link-up/internal/users/service"
 	"github.com/aws/aws-sdk-go/aws"
@@ -30,6 +31,7 @@ type config struct {
 	appconfig.Server
 	appconfig.Database
 	appconfig.AWS_S3
+	appconfig.Stripe
 }
 
 func main() {
@@ -68,8 +70,14 @@ func main() {
 	}
 	defer db.Close()
 
+	// --- Subscription SVC
+	subscriptionSvc, err := subscriptions_service.New(logger, cfg.Stripe)
+	if err != nil {
+		logger.Fatal("error creating subscription service", log.Error(err))
+	}
+
 	// --- User SVC
-	userSvc, err := users_service.New(logger, authClient, users_repository.New(db))
+	userSvc, err := users_service.New(logger, authClient, users_repository.New(db), subscriptionSvc)
 	if err != nil {
 		logger.Fatal("error initializing users service", log.Error(err))
 	}

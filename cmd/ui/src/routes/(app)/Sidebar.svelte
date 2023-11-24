@@ -13,7 +13,6 @@
 	import { darkMode } from '$lib/stores/darkMode';
 	import SidebarButton from './SidebarButton.svelte';
 	import SidebarIcon from './SidebarIcon.svelte';
-	import { Button, Dropdown, DropdownItem, Chevron, Avatar } from 'flowbite-svelte';
 
 	function toggleDarkMode() {
 		darkMode.toggle();

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import PageLoader from '$lib/components/PageLoader.svelte';
 	import VerifyEmail from '$lib/components/VerifyEmail.svelte';
 	import type { ApiError } from '$lib/services/NetworkService';
 	import UserService, { type DbUser } from '$lib/services/UserService';
@@ -7,6 +8,7 @@
 
 	let getDbUserError: string | undefined = undefined;
 	let dbUser: DbUser | undefined = undefined;
+	let loading = false;
 
 	$: getDbUser();
 
@@ -15,11 +17,14 @@
 
 		dbUser = undefined;
 		getDbUserError = undefined;
+		loading = true;
 		try {
 			dbUser = await UserService.getUser();
 			$authStore.dbUser = dbUser;
 		} catch (err: unknown) {
 			getDbUserError = (err as ApiError).message;
+		} finally {
+			loading = false;
 		}
 	}
 </script>
@@ -29,14 +34,16 @@
 >
 	<Navbar />
 	{#if $authStore.user?.emailVerified}
-		<div class="w-full relative">
-			{#if getDbUserError}
-				<div class="bg-red-900 text-white flex flex-row py-3 px-8">
-					<p>Encountered an error fetching user profile: {getDbUserError}</p>
-				</div>
-			{/if}
-			<slot />
-		</div>
+		<PageLoader {loading} size="2xl">
+			<div class="w-full relative">
+				{#if getDbUserError}
+					<div class="bg-red-900 text-white flex flex-row py-3 px-8">
+						<p>Encountered an error fetching user profile: {getDbUserError}</p>
+					</div>
+				{/if}
+				<slot />
+			</div>
+		</PageLoader>
 	{/if}
 	<VerifyEmail on:verified={getDbUser} />
 </section>

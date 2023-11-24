@@ -7,23 +7,26 @@ import (
 	"firebase.google.com/go/v4/auth"
 	internal_context "github.com/LouisHatton/menu-link-up/internal/context"
 	"github.com/LouisHatton/menu-link-up/internal/log"
+	"github.com/LouisHatton/menu-link-up/internal/subscriptions"
 	"github.com/LouisHatton/menu-link-up/internal/users"
 	"go.uber.org/zap"
 )
 
 type UserService struct {
-	logger *log.Logger
-	client *auth.Client
-	repo   users.Repository
+	logger          *log.Logger
+	client          *auth.Client
+	repo            users.Repository
+	subscriptionSvc subscriptions.Service
 }
 
 var _ users.Service = &UserService{}
 
-func New(l *log.Logger, authClient *auth.Client, userRepo users.Repository) (*UserService, error) {
+func New(l *log.Logger, authClient *auth.Client, userRepo users.Repository, subscriptionSvc subscriptions.Service) (*UserService, error) {
 	svc := UserService{
-		logger: l,
-		client: authClient,
-		repo:   userRepo,
+		logger:          l,
+		client:          authClient,
+		repo:            userRepo,
+		subscriptionSvc: subscriptionSvc,
 	}
 
 	err := svc.repo.Ping()
@@ -107,6 +110,30 @@ func (svc *UserService) createClientUserInRepo(ctx context.Context, id string) (
 	}
 
 	user := users.AuthUserRecordToUser(authRecord)
+
+	customer, subscription, err := svc.subscriptionSvc.CreateCustomerWithTrial(ctx, subscriptions.NewCustomer{
+		UserId: user.ID,
+		Name:   authRecord.DisplayName,
+		Email:  user.Email,
+	})
+	if err != nil {
+		msg := "attempting to create customer with trial"
+		logger.Error(msg, zap.Error(err))
+		return nil, fmt.Errorf(msg+": %w", err)
+	}
+
+	user.StripeCustomerId = customer.ID
+	user.StripeSubscriptionId = subscription.ID
+	user.SubscriptionStatus = subscription.Status
+
+	limits, err := svc.subscriptionSvc.GetLimitsForSubscription(ctx, subscription.ID)
+	if err != nil {
+		msg := "attempting to get limits for trial subscription"
+		logger.Error(msg, zap.Error(err))
+		return nil, fmt.Errorf(msg+": %w", err)
+	}
+	user.AddLimits(limits)
+
 	err = svc.repo.Create(ctx, &user)
 	if err != nil {
 		msg := "attempting to store user from client into repository"

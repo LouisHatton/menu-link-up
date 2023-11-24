@@ -83,6 +83,10 @@ func RequestedId(id string) zap.Field {
 	return zap.String("requestedId", id)
 }
 
+func SubscriptionId(id string) zap.Field {
+	return zap.String("subscriptionId", id)
+}
+
 func FileLocation(loc objectstore.FileLocation) zap.Field {
 	return zap.Object("fileLocation", loc)
 }

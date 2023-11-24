@@ -23,3 +23,9 @@ type AWS_S3 struct {
 	Region        string `env:"AWS_S3_REGION" envDefault:"eu-west-1"`
 	DefaultBucket string `env:"AWS_S3_DEFAULT_BUCKET" envDefault:"menulink-dev-pdf-bucket"`
 }
+
+type Stripe struct {
+	Key                      string `env:"STRIPE_KEY"`
+	DefaultSubscriptionPrice string `env:"STRIPE_DEFAULT_SUBSCRIPTION_PRICE"`
+	DefaultTrialLength       int64  `env:"STRIPE_DEFAULT_TRIAL_LENGTH" envDefault:"14"`
+}
