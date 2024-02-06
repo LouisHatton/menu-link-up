@@ -8,9 +8,10 @@ const (
 	FileIdLinkPath = FileIdPath + "/link"
 	CheckFilePath  = "/check-file"
 
-	UserIdParam     = "userId"
-	UserUrlParam    = "/{" + UserIdParam + "}"
-	UsersPath       = "/users"
-	UserIdPath      = UsersPath + UserUrlParam
-	UserBillingPath = UserIdPath + "/billing"
+	UserIdParam           = "userId"
+	UserUrlParam          = "/{" + UserIdParam + "}"
+	UsersPath             = "/users"
+	UserIdPath            = UsersPath + UserUrlParam
+	UserBillingPath       = UserIdPath + "/billing"
+	UserBillingUpdatePath = UserBillingPath + "/update"
 )

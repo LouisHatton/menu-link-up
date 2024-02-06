@@ -13,4 +13,5 @@ type Service interface {
 	GetSubscription(ctx context.Context, subscriptionId string) (*stripe.Subscription, error)
 	GetProduct(ctx context.Context, productId string) (*stripe.Product, error)
 	GetCustomer(ctx context.Context, customerId string) (*stripe.Customer, error)
+	PortalUpdateBilling(ctx context.Context, customerId string) (portalUrl string, err error)
 }

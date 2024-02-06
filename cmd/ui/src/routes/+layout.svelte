@@ -6,7 +6,6 @@
 	import { darkMode } from '$lib/stores/darkMode';
 	import { Spinner } from 'flowbite-svelte';
 	import '../app.css';
-	import ToastHandler from './(app)/ToastHandler.svelte';
 	import Navigating from './Navigating.svelte';
 	import LoadingScreen from '$lib/components/LoadingScreen.svelte';
 
@@ -38,7 +37,6 @@
 
 <main class={`${$darkMode ? 'dark' : ''}`}>
 	<Navigating />
-	<!-- <ToastHandler /> -->
 	{#if $authStore.isLoggedIn || ($page.route.id?.includes('(authentication)') && !loggingIn && !$navigating)}
 		<slot />
 	{:else if loading || $navigating}

@@ -75,7 +75,8 @@
 					<div>
 						<p class="text-lg">
 							{#if billingInfo?.defaultPayment?.brand && billingInfo?.defaultPayment.lastFour}{billingInfo
-									.defaultPayment.brand}(billingInfo.defaultPayment.lastFour){:else}No card on file{/if}
+									.defaultPayment.brand} •••• {billingInfo.defaultPayment.lastFour}{:else}No card on
+								file{/if}
 						</p>
 						<p class="">
 							{#if billingInfo?.defaultPayment?.expiresMonth && billingInfo?.defaultPayment.expiresYear}Expires

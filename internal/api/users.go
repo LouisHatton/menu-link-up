@@ -85,3 +85,26 @@ func (api *API) GetUserBilling(w http.ResponseWriter, r *http.Request) {
 
 	render.JSON(w, r, billing)
 }
+
+func (api *API) UpdateUserBilling(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	userId := internal_context.GetUserIdFromContext(ctx)
+	logger := api.l.With(log.UserId(userId), log.Context(ctx))
+
+	requestedId := chi.URLParam(r, UserIdParam)
+	logger = logger.With(log.RequestedId(requestedId))
+	if requestedId != userId {
+		logger.Warn("user attempting to update billing for someone else")
+		render.Render(w, r, responses.ErrForbidden())
+		return
+	}
+
+	url, err := api.userSvc.UpdateBillingLink(ctx, userId)
+	if err != nil {
+		logger.Error("attempting update user billing", log.Error(err))
+		render.Render(w, r, responses.ErrInternalServerError(err))
+		return
+	}
+
+	render.JSON(w, r, url)
+}

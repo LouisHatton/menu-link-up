@@ -10,6 +10,7 @@ import (
 	"github.com/LouisHatton/menu-link-up/internal/subscriptions"
 	"github.com/LouisHatton/menu-link-up/internal/users"
 	"github.com/stripe/stripe-go/v76"
+	"github.com/stripe/stripe-go/v76/billingportal/session"
 	"github.com/stripe/stripe-go/v76/customer"
 	"github.com/stripe/stripe-go/v76/product"
 	"github.com/stripe/stripe-go/v76/subscription"
@@ -119,6 +120,24 @@ func (svc *SubscriptionSvc) GetCustomer(ctx context.Context, customerId string) 
 	params.AddExpand("invoice_settings.default_payment_method")
 
 	return customer.Get(customerId, params)
+}
+
+func (svc *SubscriptionSvc) PortalUpdateBilling(ctx context.Context, customerId string) (string, error) {
+
+	params := &stripe.BillingPortalSessionParams{
+		Customer:  stripe.String(customerId),
+		ReturnURL: stripe.String("http://localhost:5173/settings"),
+		FlowData: &stripe.BillingPortalSessionFlowDataParams{
+			Type: stripe.String("payment_method_update"),
+		},
+	}
+
+	result, err := session.New(params)
+	if err != nil {
+		return "", err
+	}
+
+	return result.URL, nil
 }
 
 var _ subscriptions.Service = &SubscriptionSvc{}

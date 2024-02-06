@@ -21,3 +21,7 @@ type BillingDefaultPayment struct {
 	ExpiresYear  int    `json:"expiresYear,omitempty"`
 	LastFour     string `json:"lastFour,omitempty"`
 }
+
+type CustomerPortalLink struct {
+	Url string `json:"url"`
+}

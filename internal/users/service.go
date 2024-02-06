@@ -7,4 +7,5 @@ type Service interface {
 	DeleteById(ctx context.Context, id string) error
 	GetBandwidthLimits(ctx context.Context, id string) (*BandwidthLimits, error)
 	GetBilling(ctx context.Context, id string) (*Billing, error)
+	UpdateBillingLink(ctx context.Context, id string) (*CustomerPortalLink, error)
 }

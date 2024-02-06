@@ -73,3 +73,24 @@ func (svc *UserService) GetBilling(ctx context.Context, id string) (*users.Billi
 		DefaultPayment:    &defaultPayment,
 	}, nil
 }
+
+func (svc *UserService) UpdateBillingLink(ctx context.Context, id string) (*users.CustomerPortalLink, error) {
+	ctxUserId := internal_context.GetUserIdFromContext(ctx)
+	logger := svc.logger.With(log.Context(ctx), log.UserId(ctxUserId), log.RequestedId(id))
+
+	user, err := svc.GetById(ctx, id)
+	if err != nil {
+		logger.Error("attempting to get user from service", log.Error(err))
+		return nil, err
+	}
+
+	url, err := svc.subscriptionSvc.PortalUpdateBilling(ctx, user.StripeCustomerId)
+	if err != nil {
+		logger.Error("attempting to create customer billing portal link", log.Error(err))
+		return nil, err
+	}
+
+	return &users.CustomerPortalLink{
+		Url: url,
+	}, nil
+}
